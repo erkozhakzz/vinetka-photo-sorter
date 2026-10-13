@@ -1,0 +1,303 @@
+<!doctype html><html lang="kk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VINETKA — Фото сұрыптау</title>
+<style>
+:root{--bg:#07090a;--panel:#111416;--panel2:#171b1e;--line:#2a2f33;--text:#f6f6f3;--muted:#949a9e;--orange:#ff6800;--green:#3ddc91}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px "Segoe UI",Arial,sans-serif;height:100vh;overflow:hidden}button,input{font:inherit}.app{height:100vh;display:grid;grid-template-rows:78px 64px 1fr}.top{display:grid;grid-template-columns:300px 1fr 300px;align-items:center;padding:0 20px;background:#101315;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px}.brand img{width:52px;height:52px;border-radius:10px}.brand b{font-size:18px;letter-spacing:5px}.brand b span{color:var(--orange)}.brand small{display:block;font-size:8px;letter-spacing:4px;color:#bbb;margin-top:5px}.title{text-align:center}.title h1{font-size:21px;margin:0}.title p{font-size:10px;color:var(--muted);margin:6px}.tools{display:flex;justify-content:flex-end;gap:8px}.iconBtn{width:38px;height:38px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--text);cursor:pointer}.steps{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);background:#090b0c}.step{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--muted);position:relative}.step i{font-style:normal;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center}.step.active{color:var(--orange)}.step.active i{border-color:var(--orange)}.step.active:after{content:"";position:absolute;bottom:0;left:12%;right:12%;height:3px;background:var(--orange)}.workspace{display:grid;grid-template-columns:275px minmax(520px,1fr) 350px;gap:12px;padding:12px;min-height:0}.col{min-height:0;display:flex;flex-direction:column;gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px}.card h2{font-size:14px;margin:0 0 12px}.drop{width:100%;min-height:92px;border:1px dashed #6d7479;border-radius:10px;background:var(--panel2);color:var(--text);display:grid;place-items:center;padding:12px;cursor:pointer}.drop strong{color:var(--orange)}.types{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.types span{border:1px solid var(--line);border-radius:7px;text-align:center;padding:8px}.fileline{margin-top:9px;padding:9px;border:1px solid var(--line);border-radius:8px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stats{margin-top:auto;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{text-align:center}.stat b{font-size:22px;display:block}.stat small{color:var(--muted)}.summary{display:grid;grid-template-columns:repeat(4,1fr);padding:12px}.summary div{text-align:center;border-right:1px solid var(--line)}.summary div:last-child{border:0}.summary b{font-size:20px;display:block}.summary small{font-size:10px;color:var(--muted)}.main{min-height:0;display:flex;flex-direction:column}.listhead{display:flex;align-items:center;justify-content:space-between;padding:2px 6px}.search{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 11px;width:210px}.tableWrap{min-height:0;flex:1;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}table{border-collapse:collapse;width:100%}th{position:sticky;top:0;background:var(--panel2);z-index:2;text-align:left;font-size:10px;color:var(--muted);padding:12px}td{padding:11px 12px;border-top:1px solid var(--line);font-size:12px}tr{cursor:pointer}tbody tr:hover,tbody tr.sel{background:#211a15}tbody tr.sel{box-shadow:inset 3px 0 var(--orange)}.avatar{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#353a3e;margin-right:8px;font-weight:700}.badge{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:5px 8px;font-size:9px}.found{color:var(--green)}.review{color:var(--orange)}.edit{border:1px solid #814318;background:transparent;color:var(--orange);border-radius:6px;padding:5px 8px;cursor:pointer}.preview{min-height:0;overflow:auto}.stage{height:390px;border-radius:10px;background:radial-gradient(circle at 50% 25%,#4b5257,#1b1e20 48%,#090a0b);overflow:hidden;position:relative}.stage img{width:100%;height:100%;object-fit:contain}.empty{height:100%;display:grid;place-items:center;text-align:center;color:#c7cbcd;padding:35px}.photoMeta{position:absolute;left:10px;right:10px;bottom:10px;background:#070809dc;border:1px solid #ffffff20;border-radius:9px;padding:11px;backdrop-filter:blur(8px)}.photoMeta b,.photoMeta small{display:block}.photoMeta small{color:var(--muted);margin-top:4px}.filmHead{display:flex;justify-content:space-between;margin:13px 0 7px}.film{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.thumb{flex:0 0 62px;height:62px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);overflow:hidden;color:var(--text);cursor:pointer;position:relative}.thumb.active{border:2px solid var(--orange)}.thumb img{width:100%;height:100%;object-fit:cover}.thumb span{position:absolute;right:2px;bottom:2px;background:#000c;font-size:7px;padding:2px}.gender{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.gender button,.wide{height:39px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);cursor:pointer}.gender button.active{border-color:var(--orange);color:var(--orange)}.wide{width:100%;margin-top:7px}.primary{background:var(--orange);color:#fff;border:0;font-weight:700;height:50px}.primary:disabled{opacity:0.6;cursor:not-allowed}.toast{position:fixed;right:18px;bottom:18px;background:var(--panel);border:1px solid #27764f;border-radius:10px;padding:12px 16px;z-index:30}.modalBg{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:20}.modalBg.show{display:grid}.modal{width:480px;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}.modal h2{margin-top:0}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form label{color:var(--muted);font-size:11px}.form input{display:block;width:100%;margin-top:6px;background:var(--panel2);border:1px solid var(--line);color:var(--text);height:40px;border-radius:7px;padding:9px}.modal footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.modal footer button{padding:10px 17px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}.modal footer .save{background:var(--orange);border-color:var(--orange)}body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111416;--muted:#687076}.light .top{background:#fff}.light .steps{background:#fafafa}@media(max-width:1200px){.workspace{grid-template-columns:240px 1fr 310px}.top{grid-template-columns:230px 1fr 230px}}
+.hintBox{margin-top:6px;font-size:10px;color:var(--muted);text-align:center}
+</style></head><body><div class="app">
+<header class="top"><div class="brand"><img src="icon.png"><div><b>VINETKA<span>.KZ</span></b><small>SCHOOL MEMORIES</small></div></div><div class="title"><h1 id="pageTitle">Фото сұрыптау</h1><p>VINETKA.KZ / SCHOOL / PHOTO SORTER</p></div><div class="tools"><button class="iconBtn" id="lang">RU</button><button class="iconBtn" id="theme">☀</button></div></header>
+<nav class="steps"><div class="step"><i>01</i><span data-k="Тізім" data-r="Список">Тізім</span></div><div class="step"><i>02</i><span data-k="Фотолар" data-r="Фото">Фотолар</span></div><div class="step active"><i>03</i><span data-k="Сәйкестік" data-r="Сопоставление">Сәйкестік</span></div><div class="step"><i>04</i><span data-k="Экспорт" data-r="Экспорт">Экспорт</span></div></nav>
+<div class="workspace"><aside class="col">
+<section class="card"><h2 data-k="Тізімді жүктеу" data-r="Загрузить список">Тізімді жүктеу</h2><button class="drop" id="loadList"><span data-k="Word, Excel, CSV немесе TXT таңдаңыз" data-r="Выберите Word, Excel, CSV или TXT">Word, Excel, CSV немесе TXT таңдаңыз</span><strong data-k="Тізімді таңдау" data-r="Выбрать список">Тізімді таңдау</strong></button><div class="types"><span>Word</span><span>Excel</span><span>TXT</span></div><div class="fileline" id="listFile">—</div></section>
+<section class="card"><h2 data-k="Фото папкасы" data-r="Папка с фотографиями">Фото папкасы</h2><button class="drop" id="loadPhotos"><span data-k="JPG, PNG және RAW файлдары" data-r="JPG, PNG и RAW файлы">JPG, PNG және RAW файлдары</span><strong data-k="Папканы таңдау" data-r="Выбрать папку">Папканы таңдау</strong></button><div class="fileline" id="photoFolder">—</div></section>
+<section class="card stats"><div class="stat"><b id="studentCount">0</b><small data-k="оқушы" data-r="учеников">оқушы</small></div><div class="stat"><b id="photoCount">0</b><small data-k="фото" data-r="фото">фото</small></div></section></aside>
+<section class="main"><div class="card summary"><div><b id="sumAll">0</b><small data-k="Барлығы" data-r="Всего">Барлығы</small></div><div><b class="found" id="sumFound">0</b><small data-k="Табылды" data-r="Найдено">Табылды</small></div><div><b class="review" id="sumReview">0</b><small data-k="Тексеру керек" data-r="Проверить">Тексеру керек</small></div><div><b id="sumPct">0%</b><small data-k="Дайын" data-r="Готово">Дайын</small></div></div><div class="listhead"><h2 data-k="Оқушылар тізімі" data-r="Список учеников">Оқушылар тізімі</h2><input class="search" id="search" placeholder="Іздеу..."></div><div class="tableWrap"><table><thead><tr><th>№</th><th data-k="Аты-жөні" data-r="Фамилия и имя">Аты-жөні</th><th data-k="Фото нөмірі" data-r="Номер фото">Фото нөмірі</th><th data-k="Статус" data-r="Статус">Статус</th><th data-k="Әрекет" data-r="Действие">Әрекет</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<aside class="card preview"><div class="stage" id="stage"><div class="empty" data-k="Фото папкасын таңдаңыз" data-r="Выберите папку с фотографиями">Фото папкасын таңдаңыз</div></div><div class="filmHead"><b data-k="Алдын ала қарау" data-r="Предпросмотр">Алдын ала қарау</b><span id="position">0 / 0</span></div><div class="film" id="film"></div><div class="gender"><button id="boy" data-k="Ұл (1)" data-r="Мальчик (1)">Ұл (1)</button><button id="girl" data-k="Қыз (2)" data-r="Девочка (2)">Қыз (2)</button></div><button class="wide" id="clear" data-k="Белгіні алып тастау" data-r="Снять отметку">Белгіні алып тастау</button><button class="wide" id="editCurrent" data-k="✎ ФИ өзгерту" data-r="✎ Изменить ФИ">✎ ФИ өзгерту</button><button class="wide primary" id="export" data-k="Порт / Мод папкаларына сақтау" data-r="Сохранить в папки Порт / Мод">Порт / Мод папкаларына сақтау</button><div class="hintBox">Пернелер / Клавиши: [↑/↓] Таңдау, [1/2] Жыныс, [E] Өзгерту</div></aside></div></div>
+<div class="modalBg" id="modal"><div class="modal"><h2 data-k="ФИ және фото нөмірін өзгерту" data-r="Изменить ФИ и номер фото">ФИ және фото нөмірін өзгерту</h2><div class="form"><label><span data-k="Тегі" data-r="Фамилия">Тегі</span><input id="surname"></label><label><span data-k="Аты" data-r="Имя">Аты</span><input id="firstName"></label><label style="grid-column:1/3"><span data-k="Фото нөмірлері" data-r="Номера фотографий">Фото нөмірлері</span><input id="numbers"></label></div><footer><button id="cancel" data-k="Болдырмау" data-r="Отмена">Болдырмау</button><button class="save" id="save" data-k="Сақтау" data-r="Сохранить">Сақтау</button></footer></div></div><div id="toast"></div>
+<script>
+const api=window.vinetkaDesktop;
+let lang=localStorage.getItem('vk-lang')||'kk', theme=localStorage.getItem('vk-theme')||'dark';
+let students=[], photos=[], selected='', isExporting=false;
+const photoIndex = new Map();
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clean=s=>String(s).replace(/[_|;:,()[\]{}]+/g,' ').replace(/\s+/g,' ').trim();
+
+function photoNo(n){
+  return([...n.replace(/\.[^.]+$/,'').matchAll(/(\d{3,6})(?!\d)/g)].map(x=>x[1]).at(-1)||'');
+}
+
+function rebuildPhotoIndex(){
+  photoIndex.clear();
+  for(const p of photos){
+    if(p.number) photoIndex.set(p.number, p);
+  }
+}
+
+function parseLine(line,i){
+  const source=line.trim();
+  if(source.length<3)return null;
+  const nums=[...new Set([...source.matchAll(/(?:IMG|DSC|PHOTO|ФОТО|КАДР)?[_\-\s#№]*(\d{3,6})(?!\d)/gi)].map(m=>m[1]))];
+  let n=source.replace(/^\s*(?:№\s*)?\d{1,3}\s*[.)\-–—:]?\s*/u,'').replace(/(?:IMG|DSC|PHOTO|ФОТО|КАДР)?[_\-\s#№]*\d{3,6}(?:\.(?:jpe?g|png|heic|cr2|cr3|nef|arw|dng))?/gi,' ').replace(/\b(?:фото|фотосы|кадр|номер|нөмірі|таңдауы|выбрала|выбрал|photo)\b/gi,' ');
+  const a=clean(n.replace(/[—–\-]+/g,' ')).split(' ').filter(x=>/[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]/.test(x));
+  if(a.length<2)return null;
+  return{id:String(Date.now())+'_'+i,surname:a[0],name:a[1],numbers:nums,gender:'unknown',source};
+}
+
+function match(){
+  for(const s of students){
+    if(!s.numbers.length){
+      s.status = 'review';
+      continue;
+    }
+    s.status = s.numbers.every(num => photoIndex.has(num)) ? 'found' : 'review';
+  }
+}
+
+function current(){
+  return students.find(s=>s.id===selected)||students[0];
+}
+
+function applyLanguage(){
+  document.body.classList.toggle('light',theme==='light');
+  $$('[data-k]').forEach(e=>e.textContent=e.dataset[lang==='kk'?'k':'r']);
+  $('#lang').textContent=lang==='kk'?'RU':'ҚАЗ';
+  $('#theme').textContent=theme==='dark'?'☀':'☾';
+  $('#pageTitle').textContent=lang==='kk'?'Фото сұрыптау':'Сортировка фотографий';
+  localStorage.setItem('vk-lang',lang);
+  localStorage.setItem('vk-theme',theme);
+}
+
+function notify(text){
+  $('#toast').innerHTML='<div class="toast">✓ '+text+'</div>';
+  setTimeout(()=>$('#toast').innerHTML='',3000);
+}
+
+function renderTableRowsOnly(){
+  const q=$('#search').value.toLowerCase().trim();
+  const list = q ? students.filter(s=>(s.surname+' '+s.name+' '+s.numbers.join(' ')).toLowerCase().includes(q)) : students;
+  
+  let html = '';
+  for(let i=0; i<list.length; i++){
+    const s = list[i];
+    const isSel = s.id === selected;
+    html += `<tr data-id="${s.id}" class="${isSel?'sel':''}">
+      <td>${i+1}</td>
+      <td><i class="avatar">${s.name[0]||'?'}</i><b>${s.surname} ${s.name}</b></td>
+      <td>${s.numbers.join(', ')||'—'}</td>
+      <td><span class="badge ${s.status}">${s.status==='found'?(lang==='kk'?'✓ Табылды':'✓ Найдено'):(lang==='kk'?'⚠ Тексеру':'⚠ Проверить')}</span></td>
+      <td><button class="edit" data-edit="${s.id}">✎ ${lang==='kk'?'Өзгерту':'Изменить'}</button></td>
+    </tr>`;
+  }
+  $('#rows').innerHTML = html;
+}
+
+function render(){
+  match();
+  renderTableRowsOnly();
+
+  const found=students.filter(s=>s.status==='found').length;
+  $('#studentCount').textContent=$('#sumAll').textContent=students.length;
+  $('#photoCount').textContent=photos.length;
+  $('#sumFound').textContent=found;
+  $('#sumReview').textContent=students.length-found;
+  $('#sumPct').textContent=(students.length?Math.round(found/students.length*100):0)+'%';
+  renderPreview();
+}
+
+// Делегирование событий таблицы (значительное ускорение без сотен листенеров)
+$('#rows').onclick = (e) => {
+  const editBtn = e.target.closest('[data-edit]');
+  if(editBtn){
+    selected = editBtn.dataset.edit;
+    openEdit();
+    return;
+  }
+  const row = e.target.closest('tr[data-id]');
+  if(row){
+    selected = row.dataset.id;
+    // Быстро переключаем класс активности без полного перерендера строк
+    $$('#rows tr.sel').forEach(r => r.classList.remove('sel'));
+    row.classList.add('sel');
+    renderPreview();
+  }
+};
+
+function renderPreview(){
+  const c=current();
+  let p = null;
+  if(c && c.numbers.length){
+    for(const n of c.numbers){
+      if(photoIndex.has(n)){
+        p = photoIndex.get(n);
+        break;
+      }
+    }
+  }
+
+  $('#stage').innerHTML=p?`<img src="${p.url}"><div class="photoMeta"><b>${p.name}</b><small>${c.surname} ${c.name} · ${p.number}</small></div>`:`<div class="empty">${lang==='kk'?'Сәйкес фото табылмады':'Подходящее фото не найдено'}</div>`;
+  
+  const idx=Math.max(0,students.findIndex(s=>s.id===selected));
+  $('#position').textContent=students.length?(idx+1)+' / '+students.length:'0 / 0';
+  
+  const start=Math.max(0,Math.min(idx-2,students.length-5));
+  $('#film').innerHTML=students.slice(start,start+5).map(s=>{
+    let x = null;
+    for(const n of s.numbers){
+      if(photoIndex.has(n)){ x = photoIndex.get(n); break; }
+    }
+    return`<button class="thumb ${s.id===selected?'active':''}" data-thumb="${s.id}">${x?`<img src="${x.url}">`:`<b>${s.name[0]||'?'}</b>`}<span>${s.numbers[0]||'—'}</span></button>`;
+  }).join('');
+  
+  $$('[data-thumb]').forEach(b=>b.onclick=()=>{
+    selected=b.dataset.thumb;
+    render();
+  });
+  
+  $('#boy').classList.toggle('active',c?.gender==='boy');
+  $('#girl').classList.toggle('active',c?.gender==='girl');
+}
+
+function openEdit(){
+  const c=current();
+  if(!c)return;
+  $('#surname').value=c.surname;
+  $('#firstName').value=c.name;
+  $('#numbers').value=c.numbers.join(', ');
+  $('#modal').classList.add('show');
+}
+
+function mark(g){
+  const c=current();
+  if(!c)return;
+  c.gender=g;
+  const i=students.indexOf(c);
+  if(g!=='unknown'&&students[i+1]) selected=students[i+1].id;
+  render();
+}
+
+$('#loadList').onclick=async()=>{
+  const r=await api.selectListFile();
+  if(r.canceled)return;
+  const parsed=r.text.split(/\r?\n/).map(parseLine).filter(Boolean);
+  if(!parsed.length)return notify(lang==='kk'?'Тізім оқылмады':'Не удалось прочитать список');
+  students=parsed;
+  selected=students[0].id;
+  $('#listFile').textContent=r.name;
+  render();
+  notify(lang==='kk'?'Тізім жүктелді':'Список загружен');
+};
+
+$('#loadPhotos').onclick=async()=>{
+  const r=await api.selectPhotoFolder();
+  if(r.canceled)return;
+  photos=r.photos.map(p=>({...p,number:photoNo(p.name),sourcePath:p.path}));
+  rebuildPhotoIndex();
+  $('#photoFolder').textContent=r.folder;
+  render();
+  notify((lang==='kk'?'Фото жүктелді: ':'Загружено фото: ')+photos.length);
+};
+
+// Дебаунс поиска для плавного набора
+let searchTimer = null;
+$('#search').oninput = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    renderTableRowsOnly();
+  }, 100);
+};
+
+$('#lang').onclick=()=>{lang=lang==='kk'?'ru':'kk';applyLanguage();render();};
+$('#theme').onclick=()=>{theme=theme==='dark'?'light':'dark';applyLanguage();};
+$('#editCurrent').onclick=openEdit;
+$('#cancel').onclick=()=>$('#modal').classList.remove('show');
+
+$('#save').onclick=()=>{
+  const c=current();
+  if(!c)return;
+  c.surname=clean($('#surname').value);
+  c.name=clean($('#firstName').value);
+  c.numbers=$('#numbers').value.split(/[,;\s/]+/).map(x=>x.replace(/\D/g,'')).filter(Boolean);
+  $('#modal').classList.remove('show');
+  render();
+  notify(lang==='kk'?'Өзгеріс сақталды':'Изменения сохранены');
+};
+
+$('#boy').onclick=()=>mark('boy');
+$('#girl').onclick=()=>mark('girl');
+$('#clear').onclick=()=>mark('unknown');
+
+// Быстрый параллельный экспорт с защитой от двойного нажатия
+$('#export').onclick=async()=>{
+  if(isExporting) return;
+  const ready=[];
+  for(const s of students){
+    s.numbers.forEach((n, index)=>{
+      const p = photoIndex.get(n);
+      if(p) ready.push({s, index, p});
+    });
+  }
+  
+  if(!ready.length) return notify(lang==='kk'?'Сақтайтын фото жоқ':'Нет фотографий для сохранения');
+  
+  const exportBtn = $('#export');
+  isExporting = true;
+  exportBtn.disabled = true;
+  exportBtn.textContent = lang==='kk'?'Сақталуда...':'Сохранение...';
+
+  try {
+    const used=new Map();
+    const files=ready.map(({s,p,index})=>{
+      const ext=p.name.split('.').pop()||'jpg';
+      const base=(s.surname+' '+s.name).replace(/[<>:"/\\|?*]/g,'_');
+      const folder=index===0?'Порт':'Мод';
+      const key=folder+'|'+base;
+      const num=(used.get(key)||0)+1;
+      used.set(key,num);
+      return{sourcePath:p.sourcePath,outputName:base+(num>1?'_'+num:'')+'.'+ext,folder};
+    });
+
+    const r=await api.saveSorted(files);
+    notify((lang==='kk'?'Сақталды: ':'Сохранено: ')+r.count+' · '+r.folders.join(' / '));
+  } catch(err) {
+    notify('Қате / Ошибка: ' + err.message);
+  } finally {
+    isExporting = false;
+    exportBtn.disabled = false;
+    exportBtn.textContent = exportBtn.dataset[lang==='kk'?'k':'r'];
+  }
+};
+
+// Горячие клавиши (Keyboard Shortcuts)
+window.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+    if(e.key === 'Escape') $('#modal').classList.remove('show');
+    return;
+  }
+
+  const idx = students.findIndex(s => s.id === selected);
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (idx < students.length - 1) {
+      selected = students[idx + 1].id;
+      render();
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (idx > 0) {
+      selected = students[idx - 1].id;
+      render();
+    }
+  } else if (e.key === '1' || e.code === 'Digit1') {
+    mark('boy');
+  } else if (e.key === '2' || e.code === 'Digit2') {
+    mark('girl');
+  } else if (e.key === 'e' || e.key === 'E' || e.key === 'у' || e.key === 'У') {
+    openEdit();
+  } else if (e.key === 'Escape') {
+    $('#modal').classList.remove('show');
+  }
+});
+
+applyLanguage();
+render();
+</script></body></html>

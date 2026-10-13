@@ -1,0 +1,11 @@
+{
+  "name": "vinetka-photo-sorter-desktop",
+  "version": "2.2.4",
+  "description": "VINETKA.KZ photo sorter for Windows",
+  "main": "main.cjs",
+  "private": true,
+  "dependencies": {
+    "mammoth": "^1.12.2",
+    "xlsx": "^0.18.5"
+  }
+}
