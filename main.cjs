@@ -11,11 +11,12 @@ const mammoth = require('mammoth');
 const LICENSE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxoUTjVR0cwj-aHCtFTpYl2TXOgpHwbP8Fet4RJz7-cQpcH_s6hbaxWwDAZ-Echq7wY/exec';
 const IMAGE_RE = /\.(jpe?g|png|webp|heic|cr2|cr3|nef|arw|dng)$/i;
 const OFFLINE_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
-const SERVER_CHECK_MS = 5 * 60 * 1000;
+const SERVER_CHECK_MS = 3 * 60 * 1000; // Проверка каждые 3 минуты
 const UPDATE_CHECK_MS = 3 * 60 * 60 * 1000;
 const execFileAsync = promisify(execFile);
 let selectedRoot = '', mainWindow, licenseWindow, accessTimer, updateTimer, updateDialogOpen = false;
 let cachedDeviceId = null;
+let currentLicenseStatus = { mode: 'unknown', text: 'Тексерілуде...', daysLeft: null };
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'vinetka-photo', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 function inside(child, parent) { const rel = path.relative(parent, child); return rel && !rel.startsWith('..') && !path.isAbsolute(rel); }
@@ -38,7 +39,11 @@ async function getDeviceId() {
 
 async function checkLicense(licenseKey) {
   const deviceId = await getDeviceId();
-  const response = await net.fetch(LICENSE_ENDPOINT, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ licenseKey, deviceId }) });
+  const response = await net.fetch(LICENSE_ENDPOINT, { 
+    method: 'POST', 
+    headers: { 'content-type': 'application/json' }, 
+    body: JSON.stringify({ licenseKey, deviceId }) 
+  });
   if (!response.ok) throw new Error('network');
   return response.json();
 }
@@ -108,16 +113,70 @@ async function saveLicense(data) {
   await writeFile(licensePath(), safeStorage.encryptString(JSON.stringify(data)));
 }
 
+function calculateDaysLeft(expiresAt) {
+  if (!expiresAt) return null;
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  if (diff <= 0) return 0;
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function updateClientLicenseStatus(status) {
+  currentLicenseStatus = status;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('license:updated', currentLicenseStatus);
+  }
+}
+
 async function resolveAccess() {
   const cached = await loadLicense();
   try {
     const result = await checkLicense(cached?.licenseKey || '');
-    if (!result.ok) return result;
-    await saveLicense({ licenseKey: cached?.licenseKey || '', mode: result.mode, customer: result.customer || '', expiresAt: result.expiresAt, lastServerCheck: Date.now() });
+    if (!result.ok) {
+      if (result.error === 'blocked') {
+        updateClientLicenseStatus({ mode: 'blocked', text: 'Бұғатталған / Заблокирован', daysLeft: 0, error: 'blocked' });
+      }
+      return result;
+    }
+
+    const daysLeft = calculateDaysLeft(result.expiresAt);
+    const mode = result.mode; // 'licensed' или 'trial'
+    const statusData = {
+      licenseKey: cached?.licenseKey || '',
+      mode: mode,
+      customer: result.customer || '',
+      expiresAt: result.expiresAt,
+      lastServerCheck: Date.now(),
+      daysLeft: daysLeft
+    };
+    await saveLicense(statusData);
+    
+    updateClientLicenseStatus({
+      mode: mode,
+      customer: result.customer || '',
+      expiresAt: result.expiresAt,
+      daysLeft: daysLeft,
+      text: mode === 'trial' ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
+    });
+
     return result;
-  } catch {
-    const expires = new Date(cached?.expiresAt || 0).getTime(), checked = Number(cached?.lastServerCheck || 0);
-    if (cached?.mode === 'licensed' && expires > Date.now() && Date.now() - checked <= OFFLINE_GRACE_MS) return { ok: true, mode: 'offline', expiresAt: cached.expiresAt };
+  } catch (err) {
+    const expires = new Date(cached?.expiresAt || 0).getTime();
+    const checked = Number(cached?.lastServerCheck || 0);
+    const daysLeft = calculateDaysLeft(cached?.expiresAt);
+
+    if (expires > Date.now() && Date.now() - checked <= OFFLINE_GRACE_MS) {
+      const mode = cached?.mode || 'offline';
+      updateClientLicenseStatus({
+        mode: mode,
+        customer: cached?.customer || '',
+        expiresAt: cached?.expiresAt,
+        daysLeft: daysLeft,
+        text: `Офлайн (${daysLeft} к/д)`
+      });
+      return { ok: true, mode: 'offline', expiresAt: cached?.expiresAt };
+    }
+
+    updateClientLicenseStatus({ mode: 'error', text: 'Интернет жоқ / Нет сети', daysLeft: daysLeft, error: 'network' });
     return { ok: false, error: 'network' };
   }
 }
@@ -145,19 +204,34 @@ async function openMainWindow() {
   await mainWindow.loadFile(path.join(__dirname, 'index.html'));
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   
+  // Отправляем начальный статус после загрузки окна
+  mainWindow.webContents.once('did-finish-load', () => {
+    mainWindow.webContents.send('license:updated', currentLicenseStatus);
+  });
+
   // Фоновая проверка обновлений
   setTimeout(() => checkForUpdates({ silent: true }), 4000);
   clearInterval(updateTimer);
   updateTimer = setInterval(() => checkForUpdates({ silent: true }), UPDATE_CHECK_MS);
   
-  // Фоновая периодическая валидация лицензии
+  // Фоновая периодическая валидация лицензии (каждые 3 минуты)
   clearInterval(accessTimer);
   accessTimer = setInterval(async () => {
     const access = await resolveAccess();
     if (!access.ok && access.error !== 'network' && mainWindow && !mainWindow.isDestroyed()) {
       clearInterval(accessTimer); 
       clearInterval(updateTimer);
-      await dialog.showMessageBox(mainWindow, { type: 'warning', title: 'VINETKA', message: 'Қолжетімділік тоқтатылды / Доступ приостановлен', detail: 'Лицензияны қайта белсендіріңіз / Активируйте лицензию повторно' });
+      
+      const msg = access.error === 'blocked' 
+        ? 'Құрылғы әкімшімен бұғатталды / Компьютер заблокирован администратором'
+        : 'Қолжетімділік тоқтатылды / Доступ приостановлен';
+
+      await dialog.showMessageBox(mainWindow, { 
+        type: 'warning', 
+        title: 'VINETKA', 
+        message: msg, 
+        detail: 'Лицензияны тексеріңіз немесе жаңа кілт енгізіңіз / Обратитесь к администратору или активируйте новый ключ' 
+      });
       mainWindow.close(); 
       openLicenseWindow();
     }
@@ -169,16 +243,31 @@ function openLicenseWindow() {
     licenseWindow.focus();
     return;
   }
-  licenseWindow = new BrowserWindow({ width: 430, height: 390, resizable: false, maximizable: false, backgroundColor: '#090b0c', icon: path.join(__dirname, 'icon.png'), webPreferences: { nodeIntegration: true, contextIsolation: false } });
+  licenseWindow = new BrowserWindow({ width: 430, height: 420, resizable: false, maximizable: false, backgroundColor: '#090b0c', icon: path.join(__dirname, 'icon.png'), webPreferences: { nodeIntegration: true, contextIsolation: false } });
   licenseWindow.setMenuBarVisibility(false); 
   licenseWindow.loadFile(path.join(__dirname, 'license.html'));
 }
 
+ipcMain.handle('license:get-status', () => {
+  return currentLicenseStatus;
+});
+
 ipcMain.handle('license:verify', async (_event, code) => {
   try {
-    const licenseKey = String(code || '').trim().toUpperCase(), result = await checkLicense(licenseKey);
+    const licenseKey = String(code || '').trim().toUpperCase();
+    const result = await checkLicense(licenseKey);
     if (!result.ok) return result;
-    await saveLicense({ licenseKey, mode: 'licensed', customer: result.customer || '', expiresAt: result.expiresAt, lastServerCheck: Date.now() });
+    
+    const daysLeft = calculateDaysLeft(result.expiresAt);
+    await saveLicense({ 
+      licenseKey, 
+      mode: result.mode, 
+      customer: result.customer || '', 
+      expiresAt: result.expiresAt, 
+      lastServerCheck: Date.now(),
+      daysLeft: daysLeft
+    });
+
     licenseWindow?.close(); 
     await openMainWindow(); 
     return result;
@@ -215,7 +304,6 @@ ipcMain.handle('photos:save-sorted', async (_event, files) => {
   const items = Array.isArray(files) ? files : [];
   if (!items.length) return { count: 0, outputDir: selectedRoot, folders: [] };
 
-  // Создаем целевые папки один раз перед началом копирования
   const portDir = path.join(selectedRoot, 'Порт');
   const modDir = path.join(selectedRoot, 'Мод');
   await Promise.all([
@@ -245,7 +333,6 @@ ipcMain.handle('photos:save-sorted', async (_event, files) => {
     }
   }
 
-  // Параллельный пул
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, items.length) }, () => worker()));
   return { count, outputDir: selectedRoot, folders: [...folders] };
 });
@@ -261,15 +348,23 @@ app.whenReady().then(async () => {
     } 
   });
 
-  // Быстрый запуск: проверяем локальный кэш
   const cached = await loadLicense();
   const expires = new Date(cached?.expiresAt || 0).getTime();
-  const isCacheValid = cached?.mode === 'licensed' && (expires > Date.now() || !cached.expiresAt);
+  const isCacheValid = (cached?.mode === 'licensed' || cached?.mode === 'trial') && (expires > Date.now() || !cached.expiresAt);
 
   if (isCacheValid) {
-    // Мгновенно открываем окно, не заставляя пользователя ждать сеть
+    const daysLeft = calculateDaysLeft(cached?.expiresAt);
+    currentLicenseStatus = {
+      mode: cached.mode,
+      customer: cached.customer || '',
+      expiresAt: cached.expiresAt,
+      daysLeft: daysLeft,
+      text: cached.mode === 'trial' ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
+    };
+
     await openMainWindow();
-    // Проверка лицензии онлайн выполняется в фоне
+    
+    // Фоновое уточнение на сервере
     resolveAccess().then(access => {
       if (!access.ok && access.error !== 'network' && mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.close();
@@ -277,9 +372,12 @@ app.whenReady().then(async () => {
       }
     }).catch(() => {});
   } else {
-    // Если лицензия ещё не введена или просрочена — открываем окно лицензии
     const access = await resolveAccess();
-    if (access.ok) await openMainWindow(); else openLicenseWindow();
+    if (access.ok) {
+      await openMainWindow();
+    } else {
+      openLicenseWindow();
+    }
   }
 });
 
