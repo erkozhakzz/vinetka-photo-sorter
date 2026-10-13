@@ -70,31 +70,31 @@ async function checkForUpdates({ silent = true } = {}) {
     const update = await fetchUpdateConfig();
     const current = app.getVersion();
     const latest = String(update.latestVersion || '').trim();
-    const minimum = String(update.minimumVersion || '').trim();
     const downloadUrl = String(update.downloadUrl || '').trim();
-    const forced = update.forceUpdate === true || String(update.forceUpdate).toUpperCase() === 'TRUE' || (minimum && compareVersions(current, minimum) < 0);
-    if (!latest || compareVersions(latest, current) <= 0) {
-      if (!silent) await dialog.showMessageBox(mainWindow, { type: 'info', title: 'VINETKA', message: 'Сізде соңғы нұсқа орнатылған', detail: `Текущая версия: ${current}` });
+    const isNewer = compareVersions(latest, current) > 0;
+
+    if (!latest || !isNewer) {
+      if (!silent) await dialog.showMessageBox(mainWindow, { type: 'info', title: 'VINETKA', message: 'Сізде соңғы нұсқа орнатылған / У вас установлена актуальная версия', detail: `Текущая версия: ${current}` });
       return;
     }
+
     updateDialogOpen = true;
-    const buttons = forced ? ['Жаңарту / Обновить'] : ['Жаңарту / Обновить', 'Кейін / Позже'];
-    const choice = await dialog.showMessageBox(mainWindow, {
-      type: forced ? 'warning' : 'info', title: 'VINETKA — Жаңарту', buttons, cancelId: forced ? -1 : 1, defaultId: 0,
-      message: `Жаңа нұсқа қолжетімді: ${latest}`,
-      detail: `${forced ? 'Бұл міндетті жаңарту.\nЭто обязательное обновление.\n\n' : ''}${String(update.releaseNotes || '')}\n\nОрнатылған / Установлено: ${current}`,
+    await dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'VINETKA — Жаңарту қажет / Требуется обновление',
+      buttons: ['Жаңарту / Обновить'],
+      defaultId: 0,
+      cancelId: 0,
+      message: `Жаңа нұсқа қолжетімді: ${latest} (Қазіргі: ${current})`,
+      detail: `Жұмысты жалғастыру үшін бағдарламаны жаңарту қажет.\nДля продолжения работы необходимо обновить приложение.\n\n${String(update.releaseNotes || '')}`,
       noLink: true,
     });
     updateDialogOpen = false;
-    if (choice.response === 0) {
-      if (!/^https:\/\//i.test(downloadUrl)) {
-        await dialog.showErrorBox('VINETKA', 'Жүктеу сілтемесі орнатылмаған / Ссылка загрузки не настроена');
-        if (forced) app.quit();
-        return;
-      }
+
+    if (/^https?:\/\//i.test(downloadUrl)) {
       await shell.openExternal(downloadUrl);
-      if (forced) app.quit();
-    } else if (forced) app.quit();
+    }
+    app.quit();
   } catch {
     if (!silent) await dialog.showErrorBox('VINETKA', 'Жаңартуды тексеру мүмкін болмады / Не удалось проверить обновление');
   } finally { updateDialogOpen = false; }
@@ -214,7 +214,7 @@ async function openMainWindow() {
     mainWindow.webContents.send('license:updated', currentLicenseStatus);
   });
 
-  setTimeout(() => checkForUpdates({ silent: true }), 4000);
+  setTimeout(() => checkForUpdates({ silent: true }), 1500);
   clearInterval(updateTimer);
   updateTimer = setInterval(() => checkForUpdates({ silent: true }), UPDATE_CHECK_MS);
   

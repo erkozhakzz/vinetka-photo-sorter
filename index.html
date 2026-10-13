@@ -66,7 +66,7 @@
 
     <div style="margin-top:14px; border-top:1px solid var(--line); padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
       <button id="btnCheckUpdate" style="padding:8px 12px; background:var(--panel2); border:1px solid var(--line); border-radius:7px; color:var(--text); cursor:pointer; font-size:12px;" data-k="Жаңартуды тексеру" data-r="Проверить обновление">Жаңартуды тексеру</button>
-      <span style="font-size:11px; color:var(--muted);">Версия: 2.2.4</span>
+      <span style="font-size:11px; color:var(--muted);">Версия: 2.2.5</span>
     </div>
 
     <footer>
@@ -263,6 +263,18 @@ function render(){
   renderPreview();
 }
 
+function selectStudent(id){
+  selected = id;
+  const prev = $('#rows tr.sel');
+  if(prev) prev.classList.remove('sel');
+  const curr = $(`#rows tr[data-id="${id}"]`);
+  if(curr){
+    curr.classList.add('sel');
+    curr.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+  }
+  renderPreview();
+}
+
 $('#rows').onclick = (e) => {
   const editBtn = e.target.closest('[data-edit]');
   if(editBtn){
@@ -272,10 +284,7 @@ $('#rows').onclick = (e) => {
   }
   const row = e.target.closest('tr[data-id]');
   if(row){
-    selected = row.dataset.id;
-    $$('#rows tr.sel').forEach(r => r.classList.remove('sel'));
-    row.classList.add('sel');
-    renderPreview();
+    selectStudent(row.dataset.id);
   }
 };
 
@@ -306,8 +315,7 @@ function renderPreview(){
   }).join('');
   
   $$('[data-thumb]').forEach(b=>b.onclick=()=>{
-    selected=b.dataset.thumb;
-    render();
+    selectStudent(b.dataset.thumb);
   });
   
   $('#boy').classList.toggle('active',c?.gender==='boy');
@@ -328,8 +336,11 @@ function mark(g){
   if(!c)return;
   c.gender=g;
   const i=students.indexOf(c);
-  if(g!=='unknown'&&students[i+1]) selected=students[i+1].id;
-  render();
+  if(g!=='unknown'&&students[i+1]){
+    selectStudent(students[i+1].id);
+  } else {
+    renderPreview();
+  }
 }
 
 $('#loadList').onclick=async()=>{
@@ -436,14 +447,12 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowDown') {
     e.preventDefault();
     if (idx < students.length - 1) {
-      selected = students[idx + 1].id;
-      render();
+      selectStudent(students[idx + 1].id);
     }
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
     if (idx > 0) {
-      selected = students[idx - 1].id;
-      render();
+      selectStudent(students[idx - 1].id);
     }
   } else if (e.key === '1' || e.code === 'Digit1') {
     mark('boy');
