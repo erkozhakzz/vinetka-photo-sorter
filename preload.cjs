@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('vinetkaDesktop', {
   selectPhotoFolder: () => ipcRenderer.invoke('photos:select-folder'),
   saveSorted: (files) => ipcRenderer.invoke('photos:save-sorted', files),
   getLicenseStatus: () => ipcRenderer.invoke('license:get-status'),
+  verifyLicense: (code) => ipcRenderer.invoke('license:verify', code),
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
   onLicenseUpdate: (callback) => {
     ipcRenderer.on('license:updated', (_event, data) => callback(data));
   }

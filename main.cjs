@@ -11,12 +11,12 @@ const mammoth = require('mammoth');
 const LICENSE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxoUTjVR0cwj-aHCtFTpYl2TXOgpHwbP8Fet4RJz7-cQpcH_s6hbaxWwDAZ-Echq7wY/exec';
 const IMAGE_RE = /\.(jpe?g|png|webp|heic|cr2|cr3|nef|arw|dng)$/i;
 const OFFLINE_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
-const SERVER_CHECK_MS = 3 * 60 * 1000; // Проверка каждые 3 минуты
+const SERVER_CHECK_MS = 3 * 60 * 1000;
 const UPDATE_CHECK_MS = 3 * 60 * 60 * 1000;
 const execFileAsync = promisify(execFile);
 let selectedRoot = '', mainWindow, licenseWindow, accessTimer, updateTimer, updateDialogOpen = false;
 let cachedDeviceId = null;
-let currentLicenseStatus = { mode: 'unknown', text: 'Тексерілуде...', daysLeft: null };
+let currentLicenseStatus = { mode: 'unknown', text: 'Тексерілуде...', daysLeft: null, customer: '', licenseKey: '' };
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'vinetka-photo', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 function inside(child, parent) { const rel = path.relative(parent, child); return rel && !rel.startsWith('..') && !path.isAbsolute(rel); }
@@ -121,7 +121,7 @@ function calculateDaysLeft(expiresAt) {
 }
 
 function updateClientLicenseStatus(status) {
-  currentLicenseStatus = status;
+  currentLicenseStatus = Object.assign({}, currentLicenseStatus, status);
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('license:updated', currentLicenseStatus);
   }
@@ -139,7 +139,7 @@ async function resolveAccess() {
     }
 
     const daysLeft = calculateDaysLeft(result.expiresAt);
-    const mode = result.mode; // 'licensed' или 'trial'
+    const mode = result.mode;
     const statusData = {
       licenseKey: cached?.licenseKey || '',
       mode: mode,
@@ -153,6 +153,7 @@ async function resolveAccess() {
     updateClientLicenseStatus({
       mode: mode,
       customer: result.customer || '',
+      licenseKey: cached?.licenseKey || '',
       expiresAt: result.expiresAt,
       daysLeft: daysLeft,
       text: mode === 'trial' ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
@@ -169,6 +170,7 @@ async function resolveAccess() {
       updateClientLicenseStatus({
         mode: mode,
         customer: cached?.customer || '',
+        licenseKey: cached?.licenseKey || '',
         expiresAt: cached?.expiresAt,
         daysLeft: daysLeft,
         text: `Офлайн (${daysLeft} к/д)`
@@ -204,17 +206,14 @@ async function openMainWindow() {
   await mainWindow.loadFile(path.join(__dirname, 'index.html'));
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   
-  // Отправляем начальный статус после загрузки окна
   mainWindow.webContents.once('did-finish-load', () => {
     mainWindow.webContents.send('license:updated', currentLicenseStatus);
   });
 
-  // Фоновая проверка обновлений
   setTimeout(() => checkForUpdates({ silent: true }), 4000);
   clearInterval(updateTimer);
   updateTimer = setInterval(() => checkForUpdates({ silent: true }), UPDATE_CHECK_MS);
   
-  // Фоновая периодическая валидация лицензии (каждые 3 минуты)
   clearInterval(accessTimer);
   accessTimer = setInterval(async () => {
     const access = await resolveAccess();
@@ -259,17 +258,29 @@ ipcMain.handle('license:verify', async (_event, code) => {
     if (!result.ok) return result;
     
     const daysLeft = calculateDaysLeft(result.expiresAt);
-    await saveLicense({ 
+    const statusData = { 
       licenseKey, 
       mode: result.mode, 
       customer: result.customer || '', 
       expiresAt: result.expiresAt, 
       lastServerCheck: Date.now(),
       daysLeft: daysLeft
+    };
+    await saveLicense(statusData);
+
+    updateClientLicenseStatus({
+      mode: result.mode,
+      customer: result.customer || '',
+      licenseKey: licenseKey,
+      expiresAt: result.expiresAt,
+      daysLeft: daysLeft,
+      text: result.mode === 'trial' ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
     });
 
-    licenseWindow?.close(); 
-    await openMainWindow(); 
+    if (licenseWindow && !licenseWindow.isDestroyed()) {
+      licenseWindow.close();
+      await openMainWindow();
+    }
     return result;
   } catch { return { ok: false, error: 'network' }; }
 });
@@ -298,7 +309,6 @@ ipcMain.handle('photos:select-folder', async () => {
   return { canceled: false, folder: selectedRoot, photos };
 });
 
-// Ускоренное параллельное сохранение батчами (Concurrency = 8)
 ipcMain.handle('photos:save-sorted', async (_event, files) => {
   if (!selectedRoot) throw new Error('Photo folder is not selected');
   const items = Array.isArray(files) ? files : [];
@@ -357,6 +367,7 @@ app.whenReady().then(async () => {
     currentLicenseStatus = {
       mode: cached.mode,
       customer: cached.customer || '',
+      licenseKey: cached.licenseKey || '',
       expiresAt: cached.expiresAt,
       daysLeft: daysLeft,
       text: cached.mode === 'trial' ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
@@ -364,7 +375,6 @@ app.whenReady().then(async () => {
 
     await openMainWindow();
     
-    // Фоновое уточнение на сервере
     resolveAccess().then(access => {
       if (!access.ok && access.error !== 'network' && mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.close();
