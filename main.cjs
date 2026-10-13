@@ -11,7 +11,7 @@ const mammoth = require('mammoth');
 const LICENSE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxoUTjVR0cwj-aHCtFTpYl2TXOgpHwbP8Fet4RJz7-cQpcH_s6hbaxWwDAZ-Echq7wY/exec';
 const IMAGE_RE = /\.(jpe?g|png|webp|heic|cr2|cr3|nef|arw|dng)$/i;
 const OFFLINE_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
-const SERVER_CHECK_MS = 3 * 60 * 1000;
+const SERVER_CHECK_MS = 2 * 60 * 1000; // Проверка каждые 2 минуты
 const UPDATE_CHECK_MS = 3 * 60 * 60 * 1000;
 const execFileAsync = promisify(execFile);
 let selectedRoot = '', mainWindow, licenseWindow, accessTimer, updateTimer, updateDialogOpen = false;
@@ -127,22 +127,27 @@ function updateClientLicenseStatus(status) {
   }
 }
 
+// Строгая проверка доступа: если ключа нет или он заблокирован — СТРОГО ОТКАЗ
 async function resolveAccess() {
   const cached = await loadLicense();
+  
+  // Если у пользователя вообще нет активированного ключа — НЕ СОЗДАВАТЬ ТРИАЛ, сразу требовать ключ!
+  if (!cached || !cached.licenseKey) {
+    return { ok: false, error: 'no_license' };
+  }
+
   try {
-    const result = await checkLicense(cached?.licenseKey || '');
+    const result = await checkLicense(cached.licenseKey);
     if (!result.ok) {
-      if (result.error === 'blocked') {
-        updateClientLicenseStatus({ mode: 'blocked', text: 'Бұғатталған / Заблокирован', daysLeft: 0, error: 'blocked' });
-      }
+      // Сервер вернул blocked, not_found, expired и т.д.
+      await saveLicense({ licenseKey: cached.licenseKey, status: result.error || 'invalid' });
       return result;
     }
 
     const daysLeft = calculateDaysLeft(result.expiresAt);
-    const mode = result.mode;
     const statusData = {
-      licenseKey: cached?.licenseKey || '',
-      mode: mode,
+      licenseKey: cached.licenseKey,
+      mode: 'licensed',
       customer: result.customer || '',
       expiresAt: result.expiresAt,
       lastServerCheck: Date.now(),
@@ -151,24 +156,24 @@ async function resolveAccess() {
     await saveLicense(statusData);
     
     updateClientLicenseStatus({
-      mode: mode,
+      mode: 'licensed',
       customer: result.customer || '',
-      licenseKey: cached?.licenseKey || '',
+      licenseKey: cached.licenseKey,
       expiresAt: result.expiresAt,
       daysLeft: daysLeft,
-      text: mode === 'trial' ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
+      text: `Белсенді / Активен (${daysLeft} к/д)`
     });
 
     return result;
   } catch (err) {
+    // В случае сбоя сети — проверяем оффлайн грейс-период ТОЛЬКО ДЛЯ АКТИВИРОВАННЫХ ключей
     const expires = new Date(cached?.expiresAt || 0).getTime();
     const checked = Number(cached?.lastServerCheck || 0);
     const daysLeft = calculateDaysLeft(cached?.expiresAt);
 
-    if (expires > Date.now() && Date.now() - checked <= OFFLINE_GRACE_MS) {
-      const mode = cached?.mode || 'offline';
+    if (cached?.mode === 'licensed' && expires > Date.now() && Date.now() - checked <= OFFLINE_GRACE_MS) {
       updateClientLicenseStatus({
-        mode: mode,
+        mode: 'licensed',
         customer: cached?.customer || '',
         licenseKey: cached?.licenseKey || '',
         expiresAt: cached?.expiresAt,
@@ -178,7 +183,6 @@ async function resolveAccess() {
       return { ok: true, mode: 'offline', expiresAt: cached?.expiresAt };
     }
 
-    updateClientLicenseStatus({ mode: 'error', text: 'Интернет жоқ / Нет сети', daysLeft: daysLeft, error: 'network' });
     return { ok: false, error: 'network' };
   }
 }
@@ -214,6 +218,7 @@ async function openMainWindow() {
   clearInterval(updateTimer);
   updateTimer = setInterval(() => checkForUpdates({ silent: true }), UPDATE_CHECK_MS);
   
+  // Регулярная проверка на блокировку (каждые 2 минуты)
   clearInterval(accessTimer);
   accessTimer = setInterval(async () => {
     const access = await resolveAccess();
@@ -223,13 +228,13 @@ async function openMainWindow() {
       
       const msg = access.error === 'blocked' 
         ? 'Құрылғы әкімшімен бұғатталды / Компьютер заблокирован администратором'
-        : 'Қолжетімділік тоқтатылды / Доступ приостановлен';
+        : 'Лицензия мерзімі аяқталды немесе жарамсыз / Лицензия недействительна';
 
       await dialog.showMessageBox(mainWindow, { 
         type: 'warning', 
         title: 'VINETKA', 
         message: msg, 
-        detail: 'Лицензияны тексеріңіз немесе жаңа кілт енгізіңіз / Обратитесь к администратору или активируйте новый ключ' 
+        detail: 'Жаңа лицензия кілтін белсендіріңіз / Пожалуйста, активируйте действительный лицензионный ключ' 
       });
       mainWindow.close(); 
       openLicenseWindow();
@@ -242,7 +247,7 @@ function openLicenseWindow() {
     licenseWindow.focus();
     return;
   }
-  licenseWindow = new BrowserWindow({ width: 430, height: 420, resizable: false, maximizable: false, backgroundColor: '#090b0c', icon: path.join(__dirname, 'icon.png'), webPreferences: { nodeIntegration: true, contextIsolation: false } });
+  licenseWindow = new BrowserWindow({ width: 440, height: 430, resizable: false, maximizable: false, backgroundColor: '#090b0c', icon: path.join(__dirname, 'icon.png'), webPreferences: { nodeIntegration: true, contextIsolation: false } });
   licenseWindow.setMenuBarVisibility(false); 
   licenseWindow.loadFile(path.join(__dirname, 'license.html'));
 }
@@ -254,13 +259,15 @@ ipcMain.handle('license:get-status', () => {
 ipcMain.handle('license:verify', async (_event, code) => {
   try {
     const licenseKey = String(code || '').trim().toUpperCase();
+    if (!licenseKey) return { ok: false, error: 'empty_key' };
+
     const result = await checkLicense(licenseKey);
     if (!result.ok) return result;
     
     const daysLeft = calculateDaysLeft(result.expiresAt);
     const statusData = { 
       licenseKey, 
-      mode: result.mode, 
+      mode: 'licensed', 
       customer: result.customer || '', 
       expiresAt: result.expiresAt, 
       lastServerCheck: Date.now(),
@@ -269,18 +276,18 @@ ipcMain.handle('license:verify', async (_event, code) => {
     await saveLicense(statusData);
 
     updateClientLicenseStatus({
-      mode: result.mode,
+      mode: 'licensed',
       customer: result.customer || '',
       licenseKey: licenseKey,
       expiresAt: result.expiresAt,
       daysLeft: daysLeft,
-      text: result.mode === 'trial' ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
+      text: `Белсенді / Активен (${daysLeft} к/д)`
     });
 
     if (licenseWindow && !licenseWindow.isDestroyed()) {
       licenseWindow.close();
-      await openMainWindow();
     }
+    await openMainWindow();
     return result;
   } catch { return { ok: false, error: 'network' }; }
 });
@@ -358,36 +365,12 @@ app.whenReady().then(async () => {
     } 
   });
 
-  const cached = await loadLicense();
-  const expires = new Date(cached?.expiresAt || 0).getTime();
-  const isCacheValid = (cached?.mode === 'licensed' || cached?.mode === 'trial') && (expires > Date.now() || !cached.expiresAt);
-
-  if (isCacheValid) {
-    const daysLeft = calculateDaysLeft(cached?.expiresAt);
-    currentLicenseStatus = {
-      mode: cached.mode,
-      customer: cached.customer || '',
-      licenseKey: cached.licenseKey || '',
-      expiresAt: cached.expiresAt,
-      daysLeft: daysLeft,
-      text: cached.mode === 'trial' ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
-    };
-
+  const access = await resolveAccess();
+  if (access.ok) {
     await openMainWindow();
-    
-    resolveAccess().then(access => {
-      if (!access.ok && access.error !== 'network' && mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.close();
-        openLicenseWindow();
-      }
-    }).catch(() => {});
   } else {
-    const access = await resolveAccess();
-    if (access.ok) {
-      await openMainWindow();
-    } else {
-      openLicenseWindow();
-    }
+    // Если ключа нет, удален или заблокирован — СТРОГО открываем окно ввода лицензии!
+    openLicenseWindow();
   }
 });
 
