@@ -4,8 +4,16 @@
   "description": "VINETKA.KZ photo sorter for Windows",
   "main": "main.cjs",
   "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack-asar": "node build-asar.cjs"
+  },
   "dependencies": {
     "mammoth": "^1.12.2",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@electron/asar": "^3.2.9",
+    "electron": "^32.1.2"
   }
 }
