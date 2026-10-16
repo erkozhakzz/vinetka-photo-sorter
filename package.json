@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "test": "node test.cjs",
     "pack-asar": "node build-asar.cjs"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 const { app, BrowserWindow, dialog, ipcMain, protocol, net, safeStorage, shell } = require('electron');
 const { createHash } = require('node:crypto');
-const { copyFile, mkdir, readFile, readdir, writeFile, stat } = require('node:fs/promises');
+const { copyFile, mkdir, readFile, readdir, writeFile, stat, unlink } = require('node:fs/promises');
 const { execFile, spawn } = require('node:child_process');
 const { promisify } = require('node:util');
 const path = require('node:path');
@@ -318,6 +318,104 @@ async function findAdjacentPhotoFolder(startDir) {
   return null;
 }
 
+async function getSystemDrives() {
+  const drives = [];
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  for (const l of letters) {
+    const drivePath = `${l}:\\`;
+    try {
+      await stat(drivePath);
+      drives.push({ name: `${l}:`, path: drivePath, type: 'drive' });
+    } catch {}
+  }
+
+  const shortcuts = [];
+  try { shortcuts.push({ name: 'Жұмыс үстелі / Рабочий стол', path: app.getPath('desktop'), type: 'desktop', icon: '💻' }); } catch {}
+  try { shortcuts.push({ name: 'Құжаттар / Документы', path: app.getPath('documents'), type: 'documents', icon: '📁' }); } catch {}
+  try { shortcuts.push({ name: 'Жүктемелер / Загрузки', path: app.getPath('downloads'), type: 'downloads', icon: '📥' }); } catch {}
+  try { shortcuts.push({ name: 'Суреттер / Изображения', path: app.getPath('pictures'), type: 'pictures', icon: '🖼' }); } catch {}
+
+  const oneDrivePaths = [
+    process.env.OneDrive,
+    process.env.OneDriveConsumer,
+    process.env.OneDriveCommercial
+  ].filter(Boolean);
+  for (const odp of new Set(oneDrivePaths)) {
+    try {
+      await stat(odp);
+      shortcuts.push({ name: 'OneDrive', path: odp, type: 'onedrive', icon: '☁️' });
+    } catch {}
+  }
+
+  const gDriveCandidate = 'G:\\';
+  try {
+    await stat(gDriveCandidate);
+    shortcuts.push({ name: 'Google Drive (G:)', path: gDriveCandidate, type: 'gdrive', icon: '☁️' });
+  } catch {}
+
+  return { drives, shortcuts };
+}
+
+async function browseDirectory(targetPath) {
+  let resolved = targetPath ? path.resolve(targetPath) : app.getPath('pictures');
+  try {
+    const s = await stat(resolved);
+    if (!s.isDirectory()) resolved = path.dirname(resolved);
+  } catch {
+    resolved = 'C:\\';
+  }
+
+  const parentPath = path.dirname(resolved) !== resolved ? path.dirname(resolved) : null;
+  const folders = [];
+  const photos = [];
+
+  try {
+    const entries = await readdir(resolved, { withFileTypes: true });
+    for (const e of entries) {
+      if (e.name.startsWith('.')) continue;
+      const fullPath = path.join(resolved, e.name);
+      if (e.isDirectory()) {
+        folders.push({ name: e.name, path: fullPath });
+      } else if (e.isFile() && IMAGE_RE.test(e.name)) {
+        let isPlaceholder = false;
+        let size = 0;
+        let mtime = 0;
+        try {
+          const st = await stat(fullPath);
+          size = st.size;
+          mtime = st.mtimeMs;
+          if (st.size === 0) isPlaceholder = true;
+        } catch {
+          isPlaceholder = true;
+        }
+        photos.push({
+          name: e.name,
+          path: fullPath,
+          size,
+          mtime,
+          isCloudPlaceholder: isPlaceholder,
+          url: `vinetka-photo://local/${Buffer.from(fullPath).toString('base64url')}`
+        });
+      }
+    }
+  } catch (err) {
+    return { ok: false, error: err.message, currentPath: resolved, parentPath, folders: [], photos: [], photoCount: 0, folderCount: 0 };
+  }
+
+  folders.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+  photos.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+  return {
+    ok: true,
+    currentPath: resolved,
+    parentPath,
+    folders,
+    photos,
+    photoCount: photos.length,
+    folderCount: folders.length
+  };
+}
+
 async function scanFolderPhotos(targetFolder) {
   let resolved = path.resolve(targetFolder);
   try {
@@ -425,6 +523,14 @@ ipcMain.handle('list:parse-dropped', async (_event, filePath) => {
   }
 });
 
+ipcMain.handle('photos:get-drives', async () => {
+  return getSystemDrives();
+});
+
+ipcMain.handle('photos:browse-dir', async (_event, targetPath) => {
+  return browseDirectory(targetPath);
+});
+
 ipcMain.handle('photos:select-folder', async (_event, defaultPath) => {
   const options = { properties: ['openDirectory'] };
   if (defaultPath && typeof defaultPath === 'string') {
@@ -440,15 +546,65 @@ ipcMain.handle('photos:load-folder', async (_event, folderPath) => {
   return scanFolderPhotos(folderPath);
 });
 
+function getScriptPath(scriptName) {
+  const normalPath = path.join(__dirname, 'scripts', scriptName);
+  const unpackedPath = normalPath.replace('app.asar', 'app.asar.unpacked');
+  try {
+    if (require('fs').existsSync(unpackedPath)) return unpackedPath;
+  } catch {}
+  return normalPath;
+}
+
+ipcMain.handle('ai:classify-genders', async (_event, students) => {
+  if (!Array.isArray(students) || students.length === 0) {
+    return { ok: true, results: [] };
+  }
+  const scriptPath = getScriptPath('face_quality_engine.py');
+  const tempJson = path.join(app.getPath('temp'), `vinetka_gender_${Date.now()}.json`);
+  
+  try {
+    await writeFile(tempJson, JSON.stringify(students, null, 2), 'utf8');
+    const { stdout } = await execFileAsync('python', [scriptPath, '--mode', 'gender', '--input-json', tempJson], { windowsHide: true, maxBuffer: 10 * 1024 * 1024 });
+    const parsed = JSON.parse(stdout);
+    return parsed;
+  } catch (err) {
+    console.error('Gender classification error:', err);
+    // Fallback: rule-based in JS if Python fails
+    const results = students.map(s => {
+      const lower = (s.name || '').toLowerCase();
+      let gender = 'unknown';
+      if (/([ұу]лы|ов|ев|ин|вич)$/i.test(lower)) gender = 'boy';
+      else if (/(қызы|кызы|ова|ева|ина|овна|евна)$/i.test(lower)) gender = 'girl';
+      return { id: s.id, name: s.name, gender, confidence: gender === 'unknown' ? 0.0 : 0.95, source: 'js_fallback', requires_review: gender === 'unknown' };
+    });
+    return { ok: true, results };
+  } finally {
+    try { await unlink(tempJson); } catch {}
+  }
+});
+
+ipcMain.handle('ai:face-quality-debug', async (_event, photoPath) => {
+  if (!photoPath) return { ok: false, error: 'no_photo' };
+  const scriptPath = getScriptPath('face_quality_engine.py');
+  try {
+    const { stdout } = await execFileAsync('python', [scriptPath, '--mode', 'debug-image', '--photo', photoPath], { windowsHide: true, maxBuffer: 20 * 1024 * 1024 });
+    const parsed = JSON.parse(stdout);
+    return parsed;
+  } catch (err) {
+    console.error('Debug image generation error:', err);
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
   const shootDir = payload?.shootDir || selectedRoot;
   if (!shootDir) return { ok: false, error: 'no_shoot_dir' };
 
   const excludeFrames = Array.isArray(payload?.excludeFrames) ? payload.excludeFrames.join(',') : '';
-  const scriptPath = path.join(__dirname, 'scripts', 'ai_group_sorter.py');
+  const scriptPath = getScriptPath('face_quality_engine.py');
 
   return new Promise((resolve) => {
-    const args = [scriptPath, '--shoot-dir', shootDir];
+    const args = [scriptPath, '--mode', 'bursts', '--shoot-dir', shootDir];
     if (excludeFrames) {
       args.push('--exclude-frames', excludeFrames);
     }
@@ -569,8 +725,9 @@ app.whenReady().then(async () => {
   protocol.handle('vinetka-photo', (request) => { 
     try { 
       const filePath = Buffer.from(new URL(request.url).pathname.slice(1), 'base64url').toString('utf8'); 
-      if (!selectedRoot || !inside(path.resolve(filePath), selectedRoot)) return new Response('Forbidden', { status: 403 }); 
-      return net.fetch(pathToFileURL(filePath).toString()); 
+      const resolved = path.resolve(filePath);
+      if (!IMAGE_RE.test(resolved)) return new Response('Forbidden', { status: 403 }); 
+      return net.fetch(pathToFileURL(resolved).toString()); 
     } catch { 
       return new Response('Not found', { status: 404 }); 
     } 

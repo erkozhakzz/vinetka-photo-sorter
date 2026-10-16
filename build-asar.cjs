@@ -38,10 +38,12 @@ async function build() {
   }
 
   const targetAsar = path.join(outDir, 'app.asar');
+  const targetUnpacked = path.join(outDir, 'app.asar.unpacked');
   if (fs.existsSync(targetAsar)) fs.unlinkSync(targetAsar);
+  if (fs.existsSync(targetUnpacked)) fs.rmSync(targetUnpacked, { recursive: true, force: true });
 
-  console.log('Packaging clean app.asar...');
-  await asar.createPackage(staging, targetAsar);
+  console.log('Packaging clean app.asar (unpacking scripts & models for Python)...');
+  await asar.createPackageWithOptions(staging, targetAsar, { unpack: '*.{onnx,py}', unpackDir: '{scripts,models}' });
 
   const stats = fs.statSync(targetAsar);
   console.log(`Success! Built app.asar (${(stats.size / 1024 / 1024).toFixed(2)} MB) at: ${targetAsar}`);
