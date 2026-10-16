@@ -1343,6 +1343,7 @@ function handleListResult(r) {
 
   render();
   notify((lang === 'kk' ? 'Тізім жүктелді: ' : 'Загружен список: ') + students.length + (teacher ? (lang === 'kk' ? ' + мұғалім' : ' + учитель') : ''));
+  autoClassifyUnknownGenders();
 }
 
 $('#loadList').onclick = async () => {
@@ -1353,6 +1354,39 @@ $('#loadList').onclick = async () => {
     notify('Қате / Ошибка: ' + err.message);
   }
 };
+
+async function autoClassifyUnknownGenders() {
+  const unknowns = students.filter(s => (!s.gender || s.gender === 'unknown') && !s.genderManual);
+  if (!unknowns.length) return;
+  const payload = unknowns.map(s => {
+    let photoPath = null;
+    for (const n of s.numbers) {
+      const found = findPhotoByNumber(n);
+      if (found && found.sourcePath) { photoPath = found.sourcePath; break; }
+    }
+    return {
+      id: s.id,
+      name: [s.surname, s.name, s.patronymic].filter(Boolean).join(' '),
+      photoPath
+    };
+  });
+  try {
+    const res = await api.classifyGenders(payload);
+    if (res && res.ok && res.results) {
+      for (const r of res.results) {
+        const s = students.find(x => x.id === r.id);
+        if (s && !s.genderManual && r.gender !== 'unknown') {
+          s.gender = r.gender;
+          s.genderConfidence = r.confidence;
+          s.genderSource = r.source;
+        }
+      }
+      render();
+    }
+  } catch (err) {
+    console.warn('Auto gender error:', err);
+  }
+}
 
 // Handle Photo Folder Loading
 function handlePhotosResult(r) {
@@ -1370,6 +1404,7 @@ function handlePhotosResult(r) {
 
   render();
   notify((lang === 'kk' ? 'Фотолар жүктелді: ' : 'Загружено фото: ') + photos.length);
+  autoClassifyUnknownGenders();
 }
 
 // ==============================================================================
@@ -1737,11 +1772,12 @@ function renderCollages() {
     const topPhotoObj = photoByName.get(chosenName) || { url: chosenObj?.path ? `vinetka-photo://local/${btoa(encodeURIComponent(chosenObj.path))}` : '' };
 
     const metrics = chosenObj ? {
-      sharpness: Math.round(chosenObj.sharpness || 0),
-      faces: chosenObj.faces || 0,
-      eyes: chosenObj.eyes || 0,
-      score: Math.round(chosenObj.score || 0)
-    } : { sharpness: 80, faces: 4, eyes: 4, score: 85 };
+      sharpness: Math.round(chosenObj.sharpness || series.best_metrics?.sharpness || 0),
+      faces: chosenObj.faces_count || chosenObj.faces || series.best_metrics?.faces || 0,
+      eyes: chosenObj.eyes_open_count || chosenObj.eyes || series.best_metrics?.eyes || 0,
+      looking: chosenObj.looking_camera_count || series.best_metrics?.looking_camera || 0,
+      score: Math.round(chosenObj.score || series.best_metrics?.score || 0)
+    } : { sharpness: 80, faces: 4, eyes: 4, looking: 4, score: 85 };
 
     const isIncluded = series.include_in_export !== false;
 
@@ -1754,9 +1790,10 @@ function renderCollages() {
         </div>
         <div class="seriesMeta">
           <select class="seriesCategorySelect" data-cat-idx="${idx}">
-            <option value="SMALL_GROUP" ${series.category === 'SMALL_GROUP' ? 'selected' : ''}>${lang === 'kk' ? 'Шағын топ (3-6 оқушы)' : 'Группа (3-6 учеников)'}</option>
-            <option value="FULL_CLASS" ${series.category === 'FULL_CLASS' ? 'selected' : ''}>${lang === 'kk' ? 'Жалпы сынып (15+ оқушы)' : 'Общий класс (15+ учеников)'}</option>
-            <option value="DYNAMICS" ${series.category === 'DYNAMICS' ? 'selected' : ''}>${lang === 'kk' ? 'Динамика / Эмоция' : 'Динамика / Эмоция'}</option>
+            <option value="SMALL_GROUP" ${series.category === 'SMALL_GROUP' ? 'selected' : ''}>${lang === 'kk' ? 'Шағын топ (3-8 оқушы)' : 'Группа (3-8 учеников)'}</option>
+            <option value="FULL_CLASS" ${series.category === 'GENERAL_CLASS' || series.category === 'FULL_CLASS' ? 'selected' : ''}>${lang === 'kk' ? 'Жалпы сынып (15+ оқушы)' : 'Общий класс (15+ учеников)'}</option>
+            <option value="BOYS" ${series.category === 'BOYS' ? 'selected' : ''}>${lang === 'kk' ? 'Ұлдар тобы' : 'Группа мальчиков'}</option>
+            <option value="GIRLS" ${series.category === 'GIRLS' ? 'selected' : ''}>${lang === 'kk' ? 'Қыздар тобы' : 'Группа девочек'}</option>
           </select>
           <label class="seriesExportToggle">
             <input type="checkbox" data-export-idx="${idx}" ${isIncluded ? 'checked' : ''}>
@@ -1771,14 +1808,15 @@ function renderCollages() {
           <img class="recommendedImg" src="${photoByName.get(chosenName)?.url || ''}" data-preview-img="${chosenName}" title="${chosenName}">
           <div class="recommendedMeta">
             <b>${chosenName}</b>
-            <span>${series.orientation || 'Горизонтальная'}</span>
+            <span style="color:var(--text); font-weight:600;">📐 ${series.orientation || 'Горизонтальная'}</span>
           </div>
           <div class="recommendedMetrics">
-            <span class="metricPill good" title="Laplacian Sharpness">🎯 Резкость: ${metrics.sharpness}%</span>
-            <span class="metricPill good" title="Detected open eyes">👀 Көздер: ${metrics.eyes}</span>
-            <span class="metricPill" title="Detected faces">👤 Беттер: ${metrics.faces}</span>
+            <span class="metricPill good" title="Laplacian Sharpness">🎯 Резкость: ${metrics.sharpness}</span>
+            <span class="metricPill good" title="Detected open eyes">👀 Көздер: ${metrics.eyes}/${metrics.faces}</span>
+            <span class="metricPill good" title="Looking at camera">📸 Камера: ${metrics.looking}/${metrics.faces}</span>
             <span class="metricPill good" title="Overall score">⭐ ${metrics.score}</span>
           </div>
+          ${series.selection_reason ? `<div style="margin-top:6px; font-size:11px; color:#16a34a; font-weight:600; display:flex; align-items:center; gap:4px;"><span>✨</span> <span>${series.selection_reason}</span></div>` : ''}
         </div>
 
         <div class="burstStrip">

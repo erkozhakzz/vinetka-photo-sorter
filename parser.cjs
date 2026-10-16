@@ -123,6 +123,46 @@ function isTableHeaderRow(tokens, numbers) {
   return headerCount >= 1 && (headerCount >= tokens.length / 2 || tokens.every(w => TABLE_HEADER_WORDS.has(w.toLowerCase()) || (w.includes('-') && w.split('-').every(p => TABLE_HEADER_WORDS.has(p)))));
 }
 
+const KAZAKH_BOY_NAMES = new Set([
+  'азамат', 'айдос', 'айсұлтан', 'алан', 'али', 'алишер', 'арман', 'арсен', 'арыстан', 'асыл',
+  'асылбек', 'асылжан', 'ахмет', 'бақытжан', 'бауыржан', 'байбатыр', 'бекзат', 'бекболат', 'бекарыс',
+  'данияр', 'дәулет', 'дінмұхаммед', 'ерғазы', 'еркебұлан', 'ерасыл', 'жандос', 'жасұлан', 'кемел',
+  'мадияр', 'мансұр', 'мұхаммед', 'мұхаммедали', 'нұрасыл', 'нұрислам', 'нұрлан', 'рамазан', 'санжар',
+  'серік', 'сұлтан', 'төлеген', 'төлеубай', 'хасен', 'әли', 'әлихан', 'әмір', 'әміре', 'ильяс',
+  'тимур', 'дамир', 'марат', 'мурат', 'руслан', 'ерлан', 'нұржан', 'қайрат', 'исмаил'
+]);
+
+const KAZAKH_GIRL_NAMES = new Set([
+  'айару', 'айгерім', 'айзере', 'айнаш', 'айнұр', 'айсана', 'асылай', 'амина', 'амира', 'анар',
+  'аружан', 'аяулым', 'әсем', 'бөгенбай', 'гүлнар', 'дильназ', 'ділда', 'жанель', 'жәннәт', 'зарина',
+  'зейнеп', 'зере', 'инкар', 'інкәр', 'кәусар', 'мәдина', 'мақпал', 'назым', 'нұржанат', 'райяна',
+  'сабина', 'томирис', 'халида', 'айя', 'алина', 'камила', 'диана', 'жаннат', 'ару', 'жания'
+]);
+
+function detectGenderFromName(surname = '', firstName = '', patronymic = '') {
+  const p = (patronymic || '').toLowerCase().trim();
+  const s = (surname || '').toLowerCase().trim();
+  const f = (firstName || '').toLowerCase().trim();
+
+  // 1. Патронимы и отчества (100% точность)
+  if (/(ұлы|улы|ович|евич)$/i.test(p) || /(ұлы|улы|ович|евич)$/i.test(f) || /(ұлы|улы|ович|евич)$/i.test(s)) return 'boy';
+  if (/(қызы|кызы|овна|евна)$/i.test(p) || /(қызы|кызы|овна|евна)$/i.test(f) || /(қызы|кызы|овна|евна)$/i.test(s)) return 'girl';
+
+  // 2. Словарные имена
+  if (KAZAKH_BOY_NAMES.has(f) || KAZAKH_BOY_NAMES.has(s)) return 'boy';
+  if (KAZAKH_GIRL_NAMES.has(f) || KAZAKH_GIRL_NAMES.has(s)) return 'girl';
+
+  // 3. Фамильные окончания
+  if (/(ова|ева|ина)$/i.test(s)) return 'girl';
+  if (/(ов|ев|ин)$/i.test(s)) return 'boy';
+
+  // 4. Традиционные мужские / женские суффиксы и корни
+  if (/(гүл|гуль|нұр|нур|ай)$/i.test(f)) return 'girl';
+  if (/(бек|хан|бай|жан|сұлтан|султан|ғали|гали)$/i.test(f)) return 'boy';
+
+  return 'unknown';
+}
+
 /**
  * Разбор одиночной строки текста в объект записи
  */
@@ -141,6 +181,7 @@ function parseRawLine(line, index = 0, defaultRole = 'student') {
   const firstName = nameTokens[1] || '';
   const patronymic = nameTokens.slice(2).join(' ') || '';
   const fullName = nameTokens.join(' ');
+  const gender = detectGenderFromName(surname, firstName, patronymic);
 
   return {
     id: `rec_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 6)}`,
@@ -151,7 +192,9 @@ function parseRawLine(line, index = 0, defaultRole = 'student') {
     patronymic,
     fullName,
     numbers,
-    gender: 'unknown',
+    gender,
+    genderConfidence: gender !== 'unknown' ? 0.98 : 0.0,
+    genderSource: gender !== 'unknown' ? 'linguistic_rule' : null,
     source: raw
   };
 }

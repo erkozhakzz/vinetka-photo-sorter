@@ -17,6 +17,7 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
+import threading
 from typing import Dict, Any, List, Optional, Tuple
 
 from PIL import Image, ImageOps
@@ -336,7 +337,7 @@ class YuNetQualityAnalyzer:
     def is_available(self) -> bool:
         return self.detector is not None
 
-    def analyze_photo(self, photo_path: str, max_dim: int = 1920) -> Dict[str, Any]:
+    def analyze_photo(self, photo_path: str, max_dim: int = 1920, require_group: bool = False) -> Dict[str, Any]:
         p = Path(photo_path)
         if not p.exists():
             return {"ok": False, "error": f"Файл не найден: {photo_path}"}
@@ -359,9 +360,6 @@ class YuNetQualityAnalyzer:
                 resized = t.resize((new_w, new_h), Image.Resampling.BILINEAR)
                 img_bgr = cv2.cvtColor(np.array(resized), cv2.COLOR_RGB2BGR)
 
-            gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-            global_sharpness = float(cv2.Laplacian(gray, cv2.CV_64F).var())
-
             faces_list = []
             if self.detector is not None:
                 self.detector.setInputSize((new_w, new_h))
@@ -369,6 +367,26 @@ class YuNetQualityAnalyzer:
                 raw_faces = raw_faces if raw_faces is not None else []
             else:
                 raw_faces = []
+
+            # Быстрый фильтр: если отбираем коллажи, а на фото < 2 лиц — пропускаем сразу без тяжелых расчетов
+            if require_group and len(raw_faces) < 2:
+                return {
+                    "ok": True,
+                    "name": p.name,
+                    "path": str(p),
+                    "dt": dt.isoformat() if dt else None,
+                    "is_vert": is_vert,
+                    "orig_size": [orig_w, orig_h],
+                    "faces_count": len(raw_faces),
+                    "is_group": False,
+                    "overall_score": 0.0,
+                    "group_score": 0.0,
+                    "group_reason": "Одиночный кадр",
+                    "faces": []
+                }
+
+            gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+            global_sharpness = float(cv2.Laplacian(gray, cv2.CV_64F).var())
 
             total_eyes_open = 0
             total_looking_camera = 0
@@ -516,6 +534,15 @@ class YuNetQualityAnalyzer:
 
             overall_score = max(0.0, min(100.0, overall_score))
 
+            # Специализированная оценка качества для групповых коллажей
+            group_score, group_reason = self.compute_group_score(
+                faces_count=faces_count,
+                eyes_open_count=total_eyes_open,
+                looking_camera_count=total_looking_camera,
+                sharpness=global_sharpness,
+                is_vert=is_vert
+            )
+
             return {
                 "ok": True,
                 "name": p.name,
@@ -530,11 +557,63 @@ class YuNetQualityAnalyzer:
                 "sharpness": round(global_sharpness, 1),
                 "avg_face_score": round(avg_face_score, 1),
                 "overall_score": round(overall_score, 1),
+                "group_score": group_score,
+                "group_reason": group_reason,
                 "faces": faces_list
             }
 
         except Exception as e:
-            return {"ok": False, "name": p.name, "path": str(p), "error": str(e), "overall_score": 0.0, "faces_count": 0}
+            return {"ok": False, "name": p.name, "path": str(p), "error": str(e), "overall_score": 0.0, "group_score": 0.0, "faces_count": 0}
+
+    @staticmethod
+    def compute_group_score(faces_count: int, eyes_open_count: int, looking_camera_count: int, sharpness: float, is_vert: bool) -> Tuple[float, str]:
+        if faces_count < 2:
+            return 0.0, "Одиночный кадр"
+
+        # 1. Открытые глаза: +35 за 100% открытые, строгий штраф -15 за каждого моргнувшего ребенка
+        eye_ratio = eyes_open_count / faces_count
+        closed_count = faces_count - eyes_open_count
+        eye_score = (eye_ratio * 35.0) - (closed_count * 15.0)
+
+        # 2. Взгляд в камеру: +25 за всех смотрящих прямо в объектив
+        looking_ratio = looking_camera_count / faces_count
+        gaze_score = looking_ratio * 25.0
+
+        # 3. Резкость лиц и кадра (до 20 баллов)
+        sharp_score = min(20.0, (sharpness / 350.0) * 20.0)
+
+        # 4. Ориентация кадра для выпускного альбома:
+        # Для разворота альбома стандартом является горизонтальная альбомная ориентация.
+        # Вертикальные кадры с большой группой (>= 4 чел) сильно штрафуются (-20), так как не помещаются по ширине.
+        if not is_vert:
+            orient_score = 15.0
+            orient_text = "көлденең / горизонтальная"
+        else:
+            orient_text = "тік / вертикальная"
+            orient_score = -20.0 if faces_count >= 4 else 0.0
+
+        # 5. Бонус за полноту состава
+        group_bonus = min(5.0, faces_count * 0.25)
+
+        total = 10.0 + eye_score + gaze_score + sharp_score + orient_score + group_bonus
+        final_score = round(max(0.0, min(100.0, total)), 1)
+
+        # Человекочитаемая причина выбора кадра
+        reasons = []
+        if closed_count == 0:
+            reasons.append(f"барлық көздер ашық ({eyes_open_count}/{faces_count})")
+        else:
+            reasons.append(f"жабық көздер: {closed_count}")
+
+        if looking_camera_count == faces_count:
+            reasons.append("камераға қараған")
+        else:
+            reasons.append(f"камераға: {looking_camera_count}/{faces_count}")
+
+        reasons.append(orient_text)
+        reasons.append(f"анықтығы {round(sharpness)}")
+
+        return final_score, ", ".join(reasons)
 
     def _check_eye_open(self, gray: np.ndarray, ex: int, ey: int, r: int) -> bool:
         """Проверка открытости глаза по дисперсии градиента/яркости зрачка."""
@@ -685,7 +764,6 @@ def main():
                 if s.isdigit():
                     exclude_set.add(int(s))
 
-        qa = YuNetQualityAnalyzer()
         valid_exts = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
         all_files = [f for f in shoot_dir.iterdir() if f.is_file() and f.suffix.lower() in valid_exts]
 
@@ -693,35 +771,57 @@ def main():
             m = re.findall(r'\d+', fn)
             return int(m[-1]) if m else 0
 
+        # Исключаем явные номера портретов из списка учеников
         candidates = [f for f in all_files if get_frame_num(f.name) not in exclude_set]
         candidates.sort(key=lambda x: get_frame_num(x.name))
 
         total = len(candidates)
         if total == 0:
-            print(json.dumps({"ok": True, "total_candidates": 0, "series": []}))
+            print(json.dumps({"ok": True, "total_candidates": 0, "total_series": 0, "series": []}))
             return
+
+        # Изолированный детектор для каждого потока (защита от сбоев многопоточности OpenCV DNN)
+        thread_local = threading.local()
+        def get_thread_qa():
+            if not hasattr(thread_local, 'qa'):
+                thread_local.qa = YuNetQualityAnalyzer()
+            return thread_local.qa
+
+        def worker_analyze(path):
+            qa = get_thread_qa()
+            # Быстрое сканирование: если лиц меньше 2, пропускаем тяжелые расчеты
+            res = qa.analyze_photo(str(path), max_dim=1024, require_group=True)
+            res["frame_num"] = get_frame_num(res.get("name", ""))
+            return res
 
         frames_data = []
         processed = 0
 
-        with ThreadPoolExecutor(max_workers=6) as pool:
-            futures = [pool.submit(qa.analyze_photo, str(p), 1200) for p in candidates]
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            futures = [pool.submit(worker_analyze, p) for p in candidates]
             for f in futures:
                 res = f.result()
-                res["frame_num"] = get_frame_num(res.get("name", ""))
                 frames_data.append(res)
                 processed += 1
-                if processed % 5 == 0 or processed == total:
+                if processed % 10 == 0 or processed == total:
                     pct = int((processed / total) * 100)
                     print(json.dumps({"type": "progress", "current": processed, "total": total, "percent": pct}), flush=True)
 
         frames_data.sort(key=lambda x: x["frame_num"])
 
-        # Кластеризация на серии
+        # ЖЕСТКИЙ ФИЛЬТР: оставляем ТОЛЬКО групповые кадры (faces_count >= 2)
+        # Одиночные портреты и пустые кадры исключаются из коллажей навсегда!
+        group_frames = [f for f in frames_data if f.get("faces_count", 0) >= 2]
+
+        if not group_frames:
+            print(json.dumps({"ok": True, "shoot_dir": str(shoot_dir), "total_candidates": total, "total_series": 0, "series": []}, ensure_ascii=False))
+            return
+
+        # Кластеризация групповых кадров на настоящие серии дублей
         raw_bursts = []
         curr_burst = []
 
-        for f in frames_data:
+        for f in group_frames:
             if not curr_burst:
                 curr_burst.append(f)
                 continue
@@ -731,10 +831,11 @@ def main():
             t_prev = datetime.fromisoformat(prev["dt"]) if prev.get("dt") else None
             time_gap = (t_curr - t_prev).total_seconds() if t_curr and t_prev else 999
             frame_gap = f["frame_num"] - prev["frame_num"]
-            face_jump = abs(f.get("faces_count", 0) - prev.get("faces_count", 0))
+            face_diff = abs(f["faces_count"] - prev["faces_count"])
+            orient_diff = (f.get("is_vert") != prev.get("is_vert"))
 
-            orient_change = (f.get("is_vert") != prev.get("is_vert") and (f.get("faces_count", 0) >= 2 or prev.get("faces_count", 0) >= 2))
-            is_break = orient_change or time_gap > 35 or frame_gap > 3 or (face_jump >= 6 and time_gap > 12)
+            # Граница серии: смена ориентации, пауза более 35 сек, пропуск более 5 номеров кадров или сильная разница состава
+            is_break = orient_diff or time_gap > 35 or frame_gap > 5 or face_diff > 4
 
             if is_break:
                 raw_bursts.append(curr_burst)
@@ -758,31 +859,27 @@ def main():
             is_vert = vert_count > (len(burst) / 2)
             orientation_str = "Вертикальная" if is_vert else "Горизонтальная"
 
-            # Выбор лучшего кадра по 종합 очкам качества YuNet!
-            best_frame = max(burst, key=lambda x: x.get("overall_score", 0.0))
+            # ИНТЕЛЛЕКТУАЛЬНЫЙ ВЫБОР ЛУЧШЕГО КАДРА ИЗ СЕРИИ:
+            # Сравниваем дубли по group_score: открытые глаза у всех детей, взгляд в объектив,
+            # горизонтальная альбомная компоновка и резкость на лицах!
+            best_frame = max(burst, key=lambda x: (x.get("group_score", 0.0), x.get("sharpness", 0.0)))
 
-            if max_faces <= 1 and is_vert:
-                cat = "EXTRA_PORTRAITS"
-                label = "Дополнительный портрет / Одиночный"
-            elif max_faces >= 16 or avg_faces >= 14.0:
+            if max_faces >= 15 or avg_faces >= 14.0:
                 cat = "GENERAL_CLASS"
                 label = f"Общая фотография класса (серия {general_counter})"
                 general_counter += 1
-            elif 10 <= max_faces <= 16 and not is_vert and boys_counter < 2:
+            elif 9 <= max_faces < 15 and not is_vert and boys_counter < 2:
                 cat = "BOYS"
                 boys_counter += 1
                 label = "Группа: Мальчики"
-            elif 10 <= max_faces <= 16 and not is_vert and girls_counter < 2:
+            elif 9 <= max_faces < 15 and not is_vert and girls_counter < 2:
                 cat = "GIRLS"
                 girls_counter += 1
                 label = "Группа: Девочки"
-            elif max_faces >= 2:
+            else:
                 cat = "SMALL_GROUP"
                 label = f"Малая группа (серия {small_counter})"
                 small_counter += 1
-            else:
-                cat = "DO_NOT_USE"
-                label = "Не использовать"
 
             range_str = f"{burst[0]['name']}..{burst[-1]['name']}" if len(burst) > 1 else burst[0]['name']
 
@@ -797,22 +894,26 @@ def main():
                 "orientation": orientation_str,
                 "recommended_frame": best_frame["name"],
                 "chosen_frame": best_frame["name"],
+                "selection_reason": best_frame.get("group_reason", "Высокое качество композиции"),
                 "best_metrics": {
                     "faces": best_frame.get("faces_count", 0),
                     "eyes": best_frame.get("eyes_open_count", 0),
                     "looking_camera": best_frame.get("looking_camera_count", 0),
                     "sharpness": best_frame.get("sharpness", 0.0),
-                    "score": best_frame.get("overall_score", 0.0)
+                    "score": best_frame.get("group_score", best_frame.get("overall_score", 0.0)),
+                    "orientation": "Вертикальная" if best_frame.get("is_vert") else "Горизонтальная"
                 },
-                "include_in_export": cat in ("GENERAL_CLASS", "BOYS", "GIRLS", "SMALL_GROUP"),
+                "include_in_export": True,
                 "frames": [{
                     "name": fr["name"],
                     "path": fr["path"],
                     "frame_num": fr["frame_num"],
                     "faces_count": fr.get("faces_count", 0),
                     "eyes_open_count": fr.get("eyes_open_count", 0),
-                    "score": fr.get("overall_score", 0.0),
-                    "sharpness": fr.get("sharpness", 0.0)
+                    "looking_camera_count": fr.get("looking_camera_count", 0),
+                    "score": fr.get("group_score", fr.get("overall_score", 0.0)),
+                    "sharpness": fr.get("sharpness", 0.0),
+                    "is_vert": fr.get("is_vert", False)
                 } for fr in burst]
             })
 

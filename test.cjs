@@ -145,6 +145,9 @@ async function run() {
       if (fs.existsSync(realTxt)) {
         const parsedReal = await parseDocumentFile(realTxt);
         testAssert(parsedReal.students.length >= 20, `Реальный TXT съемки: прочитано ${parsedReal.students.length} учеников`);
+        const realBoys = parsedReal.students.filter(s => s.gender === 'boy');
+        const realGirls = parsedReal.students.filter(s => s.gender === 'girl');
+        testAssert(realBoys.length + realGirls.length === parsedReal.students.length, `Мгновенное определение пола при чтении списка (мальчиков: ${realBoys.length}, девочек: ${realGirls.length})`);
       }
     }
 
@@ -336,6 +339,9 @@ async function run() {
 
       const general = bRes.series.find(s => s.category === 'GENERAL_CLASS');
       testAssert(general !== undefined && general.recommended_frame !== '', `Рекомендация лучшего кадра общего класса: ${general?.recommended_frame}`);
+
+      const allSeriesHaveAtLeastTwoFaces = bRes.series.every(s => (s.max_faces || 0) >= 2);
+      testAssert(allSeriesHaveAtLeastTwoFaces, 'Исключение одиночных портретов: в сериях коллажей только кадры с 2+ лицами');
     }
 
     console.log('\n================================================================');

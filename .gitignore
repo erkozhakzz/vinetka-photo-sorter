@@ -8,3 +8,5 @@ Thumbs.db
 *.xlsx
 *.tmp
 installer_out/
+__pycache__/
+*.pyc
