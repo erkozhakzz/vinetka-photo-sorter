@@ -1,12 +1,11 @@
 const { app, BrowserWindow, dialog, ipcMain, protocol, net, safeStorage, shell } = require('electron');
 const { createHash } = require('node:crypto');
-const { copyFile, mkdir, readFile, readdir, writeFile } = require('node:fs/promises');
-const { execFile } = require('node:child_process');
+const { copyFile, mkdir, readFile, readdir, writeFile, stat } = require('node:fs/promises');
+const { execFile, spawn } = require('node:child_process');
 const { promisify } = require('node:util');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const XLSX = require('xlsx');
-const mammoth = require('mammoth');
+const { parseDocumentFile } = require('./parser.cjs');
 
 const LICENSE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxoUTjVR0cwj-aHCtFTpYl2TXOgpHwbP8Fet4RJz7-cQpcH_s6hbaxWwDAZ-Echq7wY/exec';
 const IMAGE_RE = /\.(jpe?g|png|webp|heic|cr2|cr3|nef|arw|dng)$/i;
@@ -294,45 +293,254 @@ ipcMain.handle('license:verify', async (_event, code) => {
 
 ipcMain.handle('update:check', () => checkForUpdates({ silent: false }));
 
-ipcMain.handle('list:select-file', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: [{ name: 'Тізім / Список', extensions: ['xlsx', 'xls', 'csv', 'txt', 'docx'] }] });
-  if (result.canceled || !result.filePaths[0]) return { canceled: true };
-  const filePath = result.filePaths[0], ext = path.extname(filePath).toLowerCase(); let text = '';
-  if (['.xlsx', '.xls', '.csv'].includes(ext)) { const book = XLSX.readFile(filePath); text = book.SheetNames.map((name) => XLSX.utils.sheet_to_csv(book.Sheets[name], { FS: ' | ' })).join('\n'); }
-  else if (ext === '.docx') text = (await mammoth.extractRawText({ path: filePath })).value;
-  else text = await readFile(filePath, 'utf8');
-  return { canceled: false, name: path.basename(filePath), text };
-});
+async function findAdjacentPhotoFolder(startDir) {
+  if (!startDir) return null;
+  const candidates = [
+    startDir,
+    path.join(startDir, 'Фото'),
+    path.join(startDir, 'фото'),
+    path.join(startDir, 'Photos'),
+    path.join(startDir, 'photos'),
+    path.join(startDir, 'Исходники'),
+    path.join(startDir, 'исходники'),
+    path.join(startDir, 'Кадры'),
+    path.join(startDir, 'кадры')
+  ];
+  for (const dir of candidates) {
+    try {
+      const entries = await readdir(dir, { withFileTypes: true });
+      const photoCount = entries.filter(e => e.isFile() && IMAGE_RE.test(e.name)).length;
+      if (photoCount >= 3) {
+        return { folder: path.resolve(dir), photoCount };
+      }
+    } catch {}
+  }
+  return null;
+}
 
-ipcMain.handle('photos:select-folder', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
-  if (result.canceled || !result.filePaths[0]) return { canceled: true, photos: [] };
-  selectedRoot = path.resolve(result.filePaths[0]); 
+async function scanFolderPhotos(targetFolder) {
+  let resolved = path.resolve(targetFolder);
+  try {
+    const s = await stat(resolved);
+    if (!s.isDirectory()) {
+      resolved = path.dirname(resolved);
+    }
+  } catch {}
+  selectedRoot = resolved;
   const entries = await readdir(selectedRoot, { withFileTypes: true });
   const photos = entries.filter((e) => e.isFile() && IMAGE_RE.test(e.name)).map((e) => { 
     const p = path.join(selectedRoot, e.name); 
     return { name: e.name, path: p, url: `vinetka-photo://local/${Buffer.from(p).toString('base64url')}` }; 
   });
   return { canceled: false, folder: selectedRoot, photos };
+}
+
+async function runJsFallbackCollageAnalyzer(shootDir, excludeFrames = []) {
+  try {
+    const entries = await readdir(shootDir, { withFileTypes: true });
+    const excludeSet = new Set(excludeFrames.map(Number));
+    const photos = entries
+      .filter(e => e.isFile() && IMAGE_RE.test(e.name))
+      .map(e => {
+        const numMatch = e.name.match(/\d+/g);
+        const frameNum = numMatch ? Number(numMatch[numMatch.length - 1]) : 0;
+        return {
+          name: e.name,
+          path: path.join(shootDir, e.name),
+          frame_num: frameNum
+        };
+      })
+      .filter(p => !excludeSet.has(p.frame_num))
+      .sort((a, b) => a.frame_num - b.frame_num);
+
+    const bursts = [];
+    let currentBurst = [];
+    for (const p of photos) {
+      if (currentBurst.length === 0) {
+        currentBurst.push(p);
+        continue;
+      }
+      const prev = currentBurst[currentBurst.length - 1];
+      if (p.frame_num - prev.frame_num <= 3) {
+        currentBurst.push(p);
+      } else {
+        bursts.push(currentBurst);
+        currentBurst = [p];
+      }
+    }
+    if (currentBurst.length) bursts.push(currentBurst);
+
+    const series = bursts.map((burst, idx) => {
+      const top = burst[Math.floor(burst.length / 2)] || burst[0];
+      const range = burst.length > 1 ? `${burst[0].name}..${burst[burst.length - 1].name}` : burst[0].name;
+      return {
+        series_id: `group_s${String(idx + 1).padStart(2, '0')}`,
+        category: 'SMALL_GROUP',
+        category_label: `Группа / друзья (серия ${idx + 1})`,
+        frame_range: range,
+        frame_count: burst.length,
+        avg_faces: 4.0,
+        max_faces: 5,
+        orientation: 'Горизонтальная',
+        recommended_frame: top.name,
+        chosen_frame: top.name,
+        best_metrics: { faces: 4, eyes: 4, sharpness: 80.0, score: 90.0 },
+        include_in_export: true,
+        frames: burst
+      };
+    });
+
+    return {
+      ok: true,
+      shoot_dir: shootDir,
+      total_candidates: photos.length,
+      total_series: series.length,
+      series
+    };
+  } catch (err) {
+    return { ok: false, error: err.message, series: [] };
+  }
+}
+
+ipcMain.handle('list:select-file', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, { 
+    properties: ['openFile'], 
+    filters: [{ name: 'Тізім / Список', extensions: ['xlsx', 'xls', 'csv', 'txt', 'docx'] }] 
+  });
+  if (result.canceled || !result.filePaths[0]) return { canceled: true };
+  const filePath = result.filePaths[0];
+  const parsed = await parseDocumentFile(filePath);
+  const suggestedPhotoFolder = await findAdjacentPhotoFolder(parsed.directory);
+  return { canceled: false, ...parsed, suggestedPhotoFolder };
 });
 
-ipcMain.handle('photos:save-sorted', async (_event, files) => {
+ipcMain.handle('list:parse-dropped', async (_event, filePath) => {
+  if (!filePath) return { canceled: true, error: 'empty_path' };
+  try {
+    const parsed = await parseDocumentFile(filePath);
+    const suggestedPhotoFolder = await findAdjacentPhotoFolder(parsed.directory);
+    return { canceled: false, ...parsed, suggestedPhotoFolder };
+  } catch (err) {
+    return { canceled: true, error: err.message };
+  }
+});
+
+ipcMain.handle('photos:select-folder', async (_event, defaultPath) => {
+  const options = { properties: ['openDirectory'] };
+  if (defaultPath && typeof defaultPath === 'string') {
+    options.defaultPath = defaultPath;
+  }
+  const result = await dialog.showOpenDialog(mainWindow, options);
+  if (result.canceled || !result.filePaths[0]) return { canceled: true, photos: [] };
+  return scanFolderPhotos(result.filePaths[0]);
+});
+
+ipcMain.handle('photos:load-folder', async (_event, folderPath) => {
+  if (!folderPath || typeof folderPath !== 'string') return { canceled: true, photos: [] };
+  return scanFolderPhotos(folderPath);
+});
+
+ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
+  const shootDir = payload?.shootDir || selectedRoot;
+  if (!shootDir) return { ok: false, error: 'no_shoot_dir' };
+
+  const excludeFrames = Array.isArray(payload?.excludeFrames) ? payload.excludeFrames.join(',') : '';
+  const scriptPath = path.join(__dirname, 'scripts', 'ai_group_sorter.py');
+
+  return new Promise((resolve) => {
+    const args = [scriptPath, '--shoot-dir', shootDir];
+    if (excludeFrames) {
+      args.push('--exclude-frames', excludeFrames);
+    }
+
+    let outputJson = '';
+    const proc = spawn('python', args, { windowsHide: true });
+
+    proc.stdout.on('data', (chunk) => {
+      const text = chunk.toString('utf8');
+      const lines = text.split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (parsed.type === 'progress') {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send('ai:progress', parsed);
+            }
+          } else if (parsed.type === 'result' || parsed.ok !== undefined) {
+            outputJson = trimmed;
+          }
+        } catch {}
+      }
+    });
+
+    proc.stderr.on('data', (errChunk) => {
+      console.warn('AI Sorter stderr:', errChunk.toString());
+    });
+
+    proc.on('close', async (code) => {
+      if (code === 0 && outputJson) {
+        try {
+          const result = JSON.parse(outputJson);
+          return resolve(result);
+        } catch (e) {
+          console.error('Failed to parse AI output JSON:', e);
+        }
+      }
+      const fallbackResult = await runJsFallbackCollageAnalyzer(shootDir, payload?.excludeFrames || []);
+      resolve(fallbackResult);
+    });
+
+    proc.on('error', async (err) => {
+      console.warn('Python spawn error, using JS fallback:', err);
+      const fallbackResult = await runJsFallbackCollageAnalyzer(shootDir, payload?.excludeFrames || []);
+      resolve(fallbackResult);
+    });
+  });
+});
+
+ipcMain.handle('photos:save-sorted', async (_event, payload) => {
   if (!selectedRoot) throw new Error('Photo folder is not selected');
-  const items = Array.isArray(files) ? files : [];
-  if (!items.length) return { count: 0, outputDir: selectedRoot, folders: [] };
+  
+  const files = Array.isArray(payload) ? payload : (payload?.files || []);
+  const collages = Array.isArray(payload?.collages) ? payload.collages : [];
+  const teacher = payload?.teacher || null;
 
   const portDir = path.join(selectedRoot, 'Порт');
   const modDir = path.join(selectedRoot, 'Мод');
-  await Promise.all([
-    mkdir(portDir, { recursive: true }),
-    mkdir(modDir, { recursive: true })
-  ]);
+  const collageDir = path.join(selectedRoot, 'Коллаж');
+
+  const portItems = files.filter(f => f.folder === 'Порт');
+  const modItems = files.filter(f => f.folder === 'Мод');
+
+  if (teacher && teacher.sourcePath) {
+    portItems.push({
+      sourcePath: teacher.sourcePath,
+      outputName: teacher.outputName || path.basename(teacher.sourcePath),
+      folder: 'Порт'
+    });
+  }
+
+  const createPort = portItems.length > 0;
+  const createMod = modItems.length > 0;
+  const createCollage = collages.length > 0;
+
+  const mkdirTasks = [];
+  if (createPort) mkdirTasks.push(mkdir(portDir, { recursive: true }));
+  if (createMod) mkdirTasks.push(mkdir(modDir, { recursive: true }));
+  if (createCollage) mkdirTasks.push(mkdir(collageDir, { recursive: true }));
+  await Promise.all(mkdirTasks);
 
   const folders = new Set();
   let count = 0;
-  const queue = [...items];
-  const CONCURRENCY = 8;
 
+  const queue = [];
+  if (createPort) portItems.forEach(item => queue.push({ ...item, targetDir: portDir, folderName: 'Порт' }));
+  if (createMod) modItems.forEach(item => queue.push({ ...item, targetDir: modDir, folderName: 'Мод' }));
+  if (createCollage) collages.forEach(item => queue.push({ ...item, targetDir: collageDir, folderName: 'Коллаж' }));
+
+  const CONCURRENCY = 8;
   async function worker() {
     while (queue.length > 0) {
       const item = queue.shift();
@@ -340,17 +548,20 @@ ipcMain.handle('photos:save-sorted', async (_event, files) => {
 
       const source = path.resolve(String(item.sourcePath || ''));
       const safeName = path.basename(String(item.outputName || ''));
-      const folder = item.folder === 'Мод' ? 'Мод' : 'Порт';
-      if (!inside(source, selectedRoot) || !safeName || safeName !== item.outputName) continue;
+      if (!safeName) continue;
 
-      const outputDir = folder === 'Мод' ? modDir : portDir;
-      await copyFile(source, path.join(outputDir, safeName));
-      folders.add(folder);
-      count++;
+      const dest = path.join(item.targetDir, safeName);
+      try {
+        await copyFile(source, dest);
+        folders.add(item.folderName);
+        count++;
+      } catch (err) {
+        console.error('Error copying file:', source, err);
+      }
     }
   }
 
-  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, items.length) }, () => worker()));
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, Math.max(queue.length, 1)) }, () => worker()));
   return { count, outputDir: selectedRoot, folders: [...folders] };
 });
 

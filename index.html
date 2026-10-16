@@ -1,6 +1,23 @@
 <!doctype html><html lang="kk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VINETKA — Фото сұрыптау</title>
 <style>
-:root{--bg:#07090a;--panel:#111416;--panel2:#171b1e;--line:#2a2f33;--text:#f6f6f3;--muted:#949a9e;--orange:#ff6800;--green:#3ddc91;--red:#ff4d4d;--yellow:#f5a623}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px "Segoe UI",Arial,sans-serif;height:100vh;overflow:hidden}button,input{font:inherit}.app{height:100vh;display:grid;grid-template-rows:78px 64px 1fr}.top{display:grid;grid-template-columns:320px 1fr 380px;align-items:center;padding:0 20px;background:#101315;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px}.brand img{width:52px;height:52px;border-radius:10px}.brand b{font-size:18px;letter-spacing:5px}.brand b span{color:var(--orange)}.brand small{display:block;font-size:8px;letter-spacing:4px;color:#bbb;margin-top:5px}.title{text-align:center}.title h1{font-size:21px;margin:0}.title p{font-size:10px;color:var(--muted);margin:6px}.tools{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+:root{--bg:#07090a;--panel:#111416;--panel2:#171b1e;--line:#2a2f33;--text:#f6f6f3;--muted:#949a9e;--orange:#ff6800;--green:#3ddc91;--red:#ff4d4d;--yellow:#f5a623}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px "Segoe UI",Arial,sans-serif;height:100vh;overflow:hidden}
+button,input,select{font:inherit}
+.app{height:100vh;display:grid;grid-template-rows:78px 64px 1fr}
+
+/* Header */
+.top{display:grid;grid-template-columns:320px 1fr 380px;align-items:center;padding:0 20px;background:#101315;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:52px;height:52px;border-radius:10px}
+.brand b{font-size:18px;letter-spacing:5px}
+.brand b span{color:var(--orange)}
+.brand small{display:block;font-size:8px;letter-spacing:4px;color:#bbb;margin-top:5px}
+.title{text-align:center}
+.title h1{font-size:21px;margin:0}
+.title p{font-size:10px;color:var(--muted);margin:6px}
+.tools{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+
 .licBadge{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);font-size:11px;font-weight:600;letter-spacing:0.3px;cursor:pointer;transition:all 0.2s}
 .licBadge:hover{border-color:var(--orange);transform:translateY(-1px)}
 .licDot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
@@ -10,11 +27,180 @@
 .licBadge.blocked{border-color:var(--red);color:var(--red)}
 .licBadge.licensed{border-color:#1e4c36;color:var(--green)}
 .licBadge.trial{border-color:#5c4314;color:var(--yellow)}
+
 .iconBtn{width:38px;height:38px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center;transition:border-color 0.2s}
 .iconBtn:hover{border-color:var(--orange)}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);background:#090b0c}.step{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--muted);position:relative}.step i{font-style:normal;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center}.step.active{color:var(--orange)}.step.active i{border-color:var(--orange)}.step.active:after{content:"";position:absolute;bottom:0;left:12%;right:12%;height:3px;background:var(--orange)}.workspace{display:grid;grid-template-columns:275px minmax(520px,1fr) 350px;gap:12px;padding:12px;min-height:0}.col{min-height:0;display:flex;flex-direction:column;gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px}.card h2{font-size:14px;margin:0 0 12px}.drop{width:100%;min-height:92px;border:1px dashed #6d7479;border-radius:10px;background:var(--panel2);color:var(--text);display:grid;place-items:center;padding:12px;cursor:pointer}.drop strong{color:var(--orange)}.types{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.types span{border:1px solid var(--line);border-radius:7px;text-align:center;padding:8px}.fileline{margin-top:9px;padding:9px;border:1px solid var(--line);border-radius:8px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stats{margin-top:auto;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{text-align:center}.stat b{font-size:22px;display:block}.stat small{color:var(--muted)}.summary{display:grid;grid-template-columns:repeat(4,1fr);padding:12px}.summary div{text-align:center;border-right:1px solid var(--line)}.summary div:last-child{border:0}.summary b{font-size:20px;display:block}.summary small{font-size:10px;color:var(--muted)}.main{min-height:0;display:flex;flex-direction:column}.listhead{display:flex;align-items:center;justify-content:space-between;padding:2px 6px}.search{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 11px;width:210px}.tableWrap{min-height:0;flex:1;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}table{border-collapse:collapse;width:100%}th{position:sticky;top:0;background:var(--panel2);z-index:2;text-align:left;font-size:10px;color:var(--muted);padding:12px}td{padding:11px 12px;border-top:1px solid var(--line);font-size:12px}tr{cursor:pointer}tbody tr:hover,tbody tr.sel{background:#211a15}tbody tr.sel{box-shadow:inset 3px 0 var(--orange)}.avatar{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#353a3e;margin-right:8px;font-weight:700}.badge{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:5px 8px;font-size:9px}.found{color:var(--green)}.review{color:var(--orange)}.edit{border:1px solid #814318;background:transparent;color:var(--orange);border-radius:6px;padding:5px 8px;cursor:pointer}.preview{min-height:0;overflow:auto}.stage{height:390px;border-radius:10px;background:radial-gradient(circle at 50% 25%,#4b5257,#1b1e20 48%,#090a0b);overflow:hidden;position:relative}.stage img{width:100%;height:100%;object-fit:contain}.empty{height:100%;display:grid;place-items:center;text-align:center;color:#c7cbcd;padding:35px}.photoMeta{position:absolute;left:10px;right:10px;bottom:10px;background:#070809dc;border:1px solid #ffffff20;border-radius:9px;padding:11px;backdrop-filter:blur(8px)}.photoMeta b,.photoMeta small{display:block}.photoMeta small{color:var(--muted);margin-top:4px}.filmHead{display:flex;justify-content:space-between;margin:13px 0 7px}.film{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.thumb{flex:0 0 62px;height:62px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);overflow:hidden;color:var(--text);cursor:pointer;position:relative}.thumb.active{border:2px solid var(--orange)}.thumb img{width:100%;height:100%;object-fit:cover}.thumb span{position:absolute;right:2px;bottom:2px;background:#000c;font-size:7px;padding:2px}.gender{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.gender button,.wide{height:39px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);cursor:pointer}.gender button.active{border-color:var(--orange);color:var(--orange)}.wide{width:100%;margin-top:7px}.primary{background:var(--orange);color:#fff;border:0;font-weight:700;height:50px}.primary:disabled{opacity:0.6;cursor:not-allowed}.toast{position:fixed;right:18px;bottom:18px;background:var(--panel);border:1px solid #27764f;border-radius:10px;padding:12px 16px;z-index:30}.modalBg{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:30}.modalBg.show{display:grid}.modal{width:480px;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}.modal h2{margin-top:0}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form label{color:var(--muted);font-size:11px}.form input{display:block;width:100%;margin-top:6px;background:var(--panel2);border:1px solid var(--line);color:var(--text);height:40px;border-radius:7px;padding:9px}.modal footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.modal footer button{padding:10px 17px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}.modal footer .save{background:var(--orange);border-color:var(--orange);color:#fff;font-weight:bold}body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111416;--muted:#687076}.light .top{background:#fff}.light .steps{background:#fafafa}@media(max-width:1200px){.workspace{grid-template-columns:240px 1fr 310px}.top{grid-template-columns:230px 1fr 230px}}
-.hintBox{margin-top:6px;font-size:10px;color:var(--muted);text-align:center}
-/* Settings Modal Styles */
+
+/* Steps Navigation */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);background:#090b0c}
+.step{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--muted);position:relative;cursor:pointer;transition:color 0.2s}
+.step i{font-style:normal;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center}
+.step.active{color:var(--orange)}
+.step.active i{border-color:var(--orange)}
+.step.active:after{content:"";position:absolute;bottom:0;left:12%;right:12%;height:3px;background:var(--orange)}
+
+/* Workspace Layout */
+.workspace{display:grid;grid-template-columns:285px minmax(540px,1fr) 360px;gap:12px;padding:12px;min-height:0}
+.col{min-height:0;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px;transition:border-color 0.2s, box-shadow 0.2s}
+.card h2{font-size:14px;margin:0 0 12px}
+
+/* Drag & Drop */
+.drop{width:100%;min-height:92px;border:1px dashed #6d7479;border-radius:10px;background:var(--panel2);color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;cursor:pointer;text-align:center;transition:all 0.2s}
+.drop strong{color:var(--orange);display:block;margin-top:4px}
+.drop small{display:block;margin-top:4px;font-size:10px;color:var(--muted)}
+.drop.dragover, .card.dragover{border-color:var(--orange) !important;background:rgba(255,104,0,0.09) !important;box-shadow:0 0 14px rgba(255,104,0,0.25)}
+.types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.types span{border:1px solid var(--line);border-radius:7px;text-align:center;padding:6px 2px;font-size:11px;color:var(--muted)}
+.fileline{margin-top:9px;padding:9px;border:1px solid var(--line);border-radius:8px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+
+/* Auto-suggest photo banner */
+.suggestBanner{display:none;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;background:rgba(61,220,145,0.08);border:1px solid rgba(61,220,145,0.35);border-radius:9px;font-size:11px}
+.suggestBanner.show{display:flex}
+.suggestIcon{font-size:20px;flex-shrink:0}
+.suggestContent{flex:1;min-width:0}
+.suggestTitle{font-weight:700;color:var(--green)}
+.suggestPath{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;margin-top:2px}
+.suggestBtn{background:var(--green);color:#07090a;border:0;border-radius:6px;padding:6px 11px;font-weight:700;font-size:11px;cursor:pointer;flex-shrink:0;transition:opacity 0.2s}
+.suggestBtn:hover{opacity:0.9}
+
+.stats{margin-top:auto;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stat{text-align:center}
+.stat b{font-size:22px;display:block}
+.stat small{color:var(--muted)}
+
+/* Center Column */
+.main{min-height:0;display:flex;flex-direction:column;gap:10px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);padding:12px}
+.summary div{text-align:center;border-right:1px solid var(--line)}
+.summary div:last-child{border:0}
+.summary b{font-size:20px;display:block}
+.summary small{font-size:10px;color:var(--muted)}
+
+/* Subtabs */
+.subtabs{display:flex;gap:8px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.subtab{padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:7px}
+.subtab:hover{border-color:var(--orange);color:var(--text)}
+.subtab.active{background:var(--orange);border-color:var(--orange);color:#fff}
+.subtab .badgeCount{background:rgba(0,0,0,0.25);padding:2px 7px;border-radius:12px;font-size:10px}
+
+/* Teacher Block */
+.teacherBlock{display:none;background:linear-gradient(135deg,rgba(255,104,0,0.08),rgba(255,104,0,0.02));border:1px solid rgba(255,104,0,0.35);border-radius:10px;padding:10px 14px;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;transition:all 0.2s}
+.teacherBlock.show{display:flex}
+.teacherBlock:hover{border-color:var(--orange)}
+.teacherBlock.sel{background:linear-gradient(135deg,rgba(255,104,0,0.18),rgba(255,104,0,0.05));box-shadow:inset 3px 0 var(--orange)}
+.teacherInfo{display:flex;align-items:center;gap:12px;min-width:0}
+.teacherAvatar{width:40px;height:40px;border-radius:8px;background:var(--panel2);border:1px solid var(--orange);display:grid;place-items:center;font-size:18px;overflow:hidden;flex-shrink:0}
+.teacherAvatar img{width:100%;height:100%;object-fit:cover}
+.teacherDetails{min-width:0}
+.teacherBadge{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--orange);text-transform:uppercase}
+.teacherName{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0}
+.teacherFrame{font-size:11px;color:var(--muted)}
+.teacherActions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+
+/* Students List View */
+.portraitsView{display:flex;flex-direction:column;min-height:0;flex:1;gap:8px}
+.portraitsView.hidden{display:none}
+.listhead{display:flex;align-items:center;justify-content:space-between;padding:2px 2px}
+.search{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 11px;width:210px}
+.tableWrap{min-height:0;flex:1;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%}
+th{position:sticky;top:0;background:var(--panel2);z-index:2;text-align:left;font-size:10px;color:var(--muted);padding:12px}
+td{padding:11px 12px;border-top:1px solid var(--line);font-size:12px}
+tr{cursor:pointer}
+tbody tr:hover,tbody tr.sel{background:#211a15}
+tbody tr.sel{box-shadow:inset 3px 0 var(--orange)}
+.avatar{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#353a3e;margin-right:8px;font-weight:700}
+.badge{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:4px 8px;font-size:9px}
+.found{color:var(--green)}
+.review{color:var(--orange)}
+.missing{color:var(--red)}
+.btnSmall{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;transition:all 0.2s}
+.btnSmall:hover{border-color:var(--orange);color:var(--orange)}
+.btnSmall.edit{border-color:#814318;color:var(--orange)}
+
+/* AI Collages View */
+.collagesView{display:none;flex-direction:column;min-height:0;flex:1;gap:10px}
+.collagesView.active{display:flex}
+.aiActionBar{display:flex;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;gap:12px}
+.btnRunAi{background:linear-gradient(135deg,#ff6800,#ff8c38);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(255,104,0,0.25);transition:all 0.2s}
+.btnRunAi:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(255,104,0,0.35)}
+.btnRunAi:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.aiStatsSummary{display:flex;gap:14px;font-size:11px;color:var(--muted)}
+.aiStatsSummary b{color:var(--text)}
+
+.aiProgressBox{display:none;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.aiProgressBox.show{display:block}
+.aiProgressHeader{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px}
+.aiProgressTrack{width:100%;height:8px;background:#000;border-radius:4px;overflow:hidden}
+.aiProgressFill{height:100%;width:0%;background:linear-gradient(90deg,var(--orange),var(--green));transition:width 0.2s ease}
+
+.seriesList{min-height:0;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px}
+.emptyCollageState{padding:40px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.seriesCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;transition:border-color 0.2s}
+.seriesCard:hover{border-color:#3d4347}
+.seriesHeader{display:flex;justify-content:space-between;align-items:center}
+.seriesTitle{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.seriesMeta{display:flex;align-items:center;gap:10px;font-size:11px}
+.seriesCategorySelect{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:4px 8px;font-size:11px}
+.seriesExportToggle{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text)}
+.seriesExportToggle input{cursor:pointer}
+
+.seriesContent{display:grid;grid-template-columns:210px 1fr;gap:14px;align-items:start}
+.recommendedBox{background:var(--panel2);border:1px solid rgba(61,220,145,0.35);border-radius:9px;padding:8px;display:flex;flex-direction:column;gap:6px;position:relative}
+.recommendedBadge{position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.75);color:var(--green);border:1px solid var(--green);border-radius:6px;font-size:9px;font-weight:700;padding:2px 6px;backdrop-filter:blur(4px)}
+.recommendedImg{width:100%;height:130px;object-fit:cover;border-radius:6px;cursor:pointer}
+.recommendedMeta{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.recommendedMetrics{display:flex;gap:4px;flex-wrap:wrap}
+.metricPill{background:rgba(255,255,255,0.05);border:1px solid var(--line);border-radius:4px;padding:2px 5px;font-size:9px;color:var(--muted)}
+.metricPill.good{color:var(--green);border-color:rgba(61,220,145,0.3)}
+
+.burstStrip{display:flex;flex-direction:column;gap:6px;min-width:0}
+.burstLabel{font-size:11px;color:var(--muted)}
+.burstFrames{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.burstThumb{flex:0 0 88px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);overflow:hidden;cursor:pointer;position:relative;transition:all 0.15s}
+.burstThumb:hover{transform:translateY(-2px);border-color:var(--orange)}
+.burstThumb.chosen{border:2px solid var(--green);box-shadow:0 0 8px rgba(61,220,145,0.4)}
+.burstThumb img{width:100%;height:62px;object-fit:cover;display:block}
+.burstThumbInfo{padding:3px 5px;font-size:9px;background:var(--panel2);color:var(--muted);display:flex;justify-content:space-between}
+.burstThumb.chosen .burstThumbInfo{background:rgba(61,220,145,0.15);color:var(--text);font-weight:700}
+
+/* Right Column (Preview & Action) */
+.preview{min-height:0;overflow:auto}
+.stage{height:380px;border-radius:10px;background:radial-gradient(circle at 50% 25%,#4b5257,#1b1e20 48%,#090a0b);overflow:hidden;position:relative}
+.stage img{width:100%;height:100%;object-fit:contain}
+.empty{height:100%;display:grid;place-items:center;text-align:center;color:#c7cbcd;padding:35px}
+.photoMeta{position:absolute;left:10px;right:10px;bottom:10px;background:#070809dc;border:1px solid #ffffff20;border-radius:9px;padding:11px;backdrop-filter:blur(8px)}
+.photoMeta b,.photoMeta small{display:block}
+.photoMeta small{color:var(--muted);margin-top:4px}
+.filmHead{display:flex;justify-content:space-between;margin:13px 0 7px}
+.film{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
+.thumb{flex:0 0 62px;height:62px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);overflow:hidden;color:var(--text);cursor:pointer;position:relative}
+.thumb.active{border:2px solid var(--orange)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb span{position:absolute;right:2px;bottom:2px;background:#000c;font-size:7px;padding:2px}
+.gender{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.gender button,.wide{height:39px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);cursor:pointer}
+.gender button.active{border-color:var(--orange);color:var(--orange)}
+.wide{width:100%;margin-top:7px}
+.primary{background:var(--orange);color:#fff;border:0;font-weight:700;height:50px;box-shadow:0 4px 14px rgba(255,104,0,0.3);transition:all 0.2s}
+.primary:hover{opacity:0.95;transform:translateY(-1px)}
+.primary:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--panel);border:1px solid #27764f;border-radius:10px;padding:12px 16px;z-index:30;box-shadow:0 6px 20px #000c}
+
+/* Modals */
+.modalBg{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:30}
+.modalBg.show{display:grid}
+.modal{width:500px;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}
+.modal h2{margin-top:0}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form label{color:var(--muted);font-size:11px}
+.form input,.form select{display:block;width:100%;margin-top:6px;background:var(--panel2);border:1px solid var(--line);color:var(--text);height:40px;border-radius:7px;padding:9px}
+.modal footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.modal footer button{padding:10px 17px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
+.modal footer .save{background:var(--orange);border-color:var(--orange);color:#fff;font-weight:bold}
+
+/* Settings Modal */
 .settingsInfo{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.6}
 .settingsInfo b{color:var(--text)}
 .settingsInfo span{color:var(--orange)}
@@ -24,6 +210,18 @@
 .licMsg{font-size:11px;margin-top:6px;min-height:16px}
 .licMsg.err{color:var(--red)}
 .licMsg.ok{color:var(--green)}
+
+/* Light Mode */
+body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111416;--muted:#687076}
+.light .top{background:#fff}
+.light .steps{background:#fafafa}
+.hintBox{margin-top:6px;font-size:10px;color:var(--muted);text-align:center}
+
+@media(max-width:1250px){
+  .workspace{grid-template-columns:250px 1fr 310px}
+  .top{grid-template-columns:230px 1fr 230px}
+  .seriesContent{grid-template-columns:1fr}
+}
 </style></head><body><div class="app">
 <header class="top">
   <div class="brand"><img src="icon.png"><div><b>VINETKA<span>.KZ</span></b><small>SCHOOL MEMORIES</small></div></div>
@@ -35,16 +233,199 @@
     <button class="iconBtn" id="theme" title="Тақырып / Тема">☀</button>
   </div>
 </header>
-<nav class="steps"><div class="step"><i>01</i><span data-k="Тізім" data-r="Список">Тізім</span></div><div class="step"><i>02</i><span data-k="Фотолар" data-r="Фото">Фотолар</span></div><div class="step active"><i>03</i><span data-k="Сәйкестік" data-r="Сопоставление">Сәйкестік</span></div><div class="step"><i>04</i><span data-k="Экспорт" data-r="Экспорт">Экспорт</span></div></nav>
-<div class="workspace"><aside class="col">
-<section class="card"><h2 data-k="Тізімді жүктеу" data-r="Загрузить список">Тізімді жүктеу</h2><button class="drop" id="loadList"><span data-k="Word, Excel, CSV немесе TXT таңдаңыз" data-r="Выберите Word, Excel, CSV или TXT">Word, Excel, CSV немесе TXT таңдаңыз</span><strong data-k="Тізімді таңдау" data-r="Выбрать список">Тізімді таңдау</strong></button><div class="types"><span>Word</span><span>Excel</span><span>TXT</span></div><div class="fileline" id="listFile">—</div></section>
-<section class="card"><h2 data-k="Фото папкасы" data-r="Папка с фотографиями">Фото папкасы</h2><button class="drop" id="loadPhotos"><span data-k="JPG, PNG және RAW файлдары" data-r="JPG, PNG и RAW файлы">JPG, PNG және RAW файлдары</span><strong data-k="Папканы таңдау" data-r="Выбрать папку">Папканы таңдау</strong></button><div class="fileline" id="photoFolder">—</div></section>
-<section class="card stats"><div class="stat"><b id="studentCount">0</b><small data-k="оқушы" data-r="учеников">оқушы</small></div><div class="stat"><b id="photoCount">0</b><small data-k="фото" data-r="фото">фото</small></div></section></aside>
-<section class="main"><div class="card summary"><div><b id="sumAll">0</b><small data-k="Барлығы" data-r="Всего">Барлығы</small></div><div><b class="found" id="sumFound">0</b><small data-k="Табылды" data-r="Найдено">Табылды</small></div><div><b class="review" id="sumReview">0</b><small data-k="Тексеру керек" data-r="Проверить">Тексеру керек</small></div><div><b id="sumPct">0%</b><small data-k="Дайын" data-r="Готово">Дайын</small></div></div><div class="listhead"><h2 data-k="Оқушылар тізімі" data-r="Список учеников">Оқушылар тізімі</h2><input class="search" id="search" placeholder="Іздеу..."></div><div class="tableWrap"><table><thead><tr><th>№</th><th data-k="Аты-жөні" data-r="Фамилия и имя">Аты-жөні</th><th data-k="Фото нөмірі" data-r="Номер фото">Фото нөмірі</th><th data-k="Статус" data-r="Статус">Статус</th><th data-k="Әрекет" data-r="Действие">Әрекет</th></tr></thead><tbody id="rows"></tbody></table></div></section>
-<aside class="card preview"><div class="stage" id="stage"><div class="empty" data-k="Фото папкасын таңдаңыз" data-r="Выберите папку с фотографиями">Фото папкасын таңдаңыз</div></div><div class="filmHead"><b data-k="Алдын ала қарау" data-r="Предпросмотр">Алдын ала қарау</b><span id="position">0 / 0</span></div><div class="film" id="film"></div><div class="gender"><button id="boy" data-k="Ұл (1)" data-r="Мальчик (1)">Ұл (1)</button><button id="girl" data-k="Қыз (2)" data-r="Девочка (2)">Қыз (2)</button></div><button class="wide" id="clear" data-k="Белгіні алып тастау" data-r="Снять отметку">Белгіні алып тастау</button><button class="wide" id="editCurrent" data-k="✎ ФИ өзгерту" data-r="✎ Изменить ФИ">✎ ФИ өзгерту</button><button class="wide primary" id="export" data-k="Порт / Мод папкаларына сақтау" data-r="Сохранить в папки Порт / Мод">Порт / Мод папкаларына сақтау</button><div class="hintBox">Пернелер / Клавиши: [↑/↓] Таңдау, [1/2] Жыныс, [E] Өзгерту</div></aside></div></div>
 
-<!-- Edit Student Modal -->
-<div class="modalBg" id="modal"><div class="modal"><h2 data-k="ФИ және фото нөмірін өзгерту" data-r="Изменить ФИ и номер фото">ФИ және фото нөмірін өзгерту</h2><div class="form"><label><span data-k="Тегі" data-r="Фамилия">Тегі</span><input id="surname"></label><label><span data-k="Аты" data-r="Имя">Аты</span><input id="firstName"></label><label style="grid-column:1/3"><span data-k="Фото нөмірлері" data-r="Номера фотографий">Фото нөмірлері</span><input id="numbers"></label></div><footer><button id="cancel" data-k="Болдырмау" data-r="Отмена">Болдырмау</button><button class="save" id="save" data-k="Сақтау" data-r="Сохранить">Сақтау</button></footer></div></div>
+<nav class="steps">
+  <div class="step" data-step="1"><i>01</i><span data-k="Тізім" data-r="Список">Тізім</span></div>
+  <div class="step" data-step="2"><i>02</i><span data-k="Фотолар" data-r="Фото">Фотолар</span></div>
+  <div class="step active" data-step="3"><i>03</i><span data-k="Сәйкестік" data-r="Сопоставление">Сәйкестік</span></div>
+  <div class="step" data-step="4"><i>04</i><span data-k="Экспорт" data-r="Экспорт">Экспорт</span></div>
+</nav>
+
+<div class="workspace">
+  <!-- Left Column: Source Inputs -->
+  <aside class="col">
+    <section class="card" id="listCard">
+      <h2 data-k="Тізімді жүктеу" data-r="Загрузить список">Тізімді жүктеу</h2>
+      <button class="drop" id="loadList">
+        <span data-k="Word, Excel, CSV немесе TXT таңдаңыз" data-r="Выберите Word, Excel, CSV или TXT">Word, Excel, CSV немесе TXT таңдаңыз</span>
+        <strong data-k="Тізімді таңдау" data-r="Выбрать список">Тізімді таңдау</strong>
+        <small data-k="немесе файлды осында тастаңыз (Drag & Drop)" data-r="или перетащите файл сюда (Drag & Drop)">немесе файлды осында тастаңыз (Drag & Drop)</small>
+      </button>
+      <div class="types"><span>Word</span><span>Excel</span><span>CSV</span><span>TXT</span></div>
+      <div class="fileline" id="listFile" title="—">—</div>
+    </section>
+
+    <section class="card" id="photoCard">
+      <h2 data-k="Фото папкасы" data-r="Папка с фотографиями">Фото папкасы</h2>
+      <button class="drop" id="loadPhotos">
+        <span data-k="JPG, PNG және RAW файлдары" data-r="JPG, PNG и RAW файлы">JPG, PNG және RAW файлдары</span>
+        <strong data-k="Папканы таңдау" data-r="Выбрать папку">Папканы таңдау</strong>
+        <small data-k="немесе папканы осында тастаңыз (Drag & Drop)" data-r="или перетащите папку сюда (Drag & Drop)">немесе папканы осында тастаңыз (Drag & Drop)</small>
+      </button>
+      <div class="fileline" id="photoFolder" title="—">—</div>
+
+      <!-- Auto-suggest photo folder banner -->
+      <div id="suggestBanner" class="suggestBanner">
+        <div class="suggestIcon">📁</div>
+        <div class="suggestContent">
+          <div class="suggestTitle" data-k="Фото папкасы табылды!" data-r="Найдена папка с фото!">Фото папкасы табылды!</div>
+          <div class="suggestPath" id="suggestPath">—</div>
+        </div>
+        <button id="btnLoadSuggested" class="suggestBtn" data-k="Жүктеу" data-r="Загрузить">Жүктеу</button>
+      </div>
+    </section>
+
+    <section class="card stats">
+      <div class="stat"><b id="studentCount">0</b><small data-k="оқушы" data-r="учеников">оқушы</small></div>
+      <div class="stat"><b id="photoCount">0</b><small data-k="фото" data-r="фото">фото</small></div>
+    </section>
+  </aside>
+
+  <!-- Center Column: Verification Center -->
+  <section class="main">
+    <div class="card summary">
+      <div><b id="sumAll">0</b><small data-k="Барлығы" data-r="Всего">Барлығы</small></div>
+      <div><b class="found" id="sumFound">0</b><small data-k="Табылды" data-r="Найдено">Табылды</small></div>
+      <div><b class="review" id="sumReview">0</b><small data-k="Тексеру керек" data-r="Проверить">Тексеру керек</small></div>
+      <div><b id="sumPct">0%</b><small data-k="Дайын" data-r="Готово">Дайын</small></div>
+    </div>
+
+    <!-- Sub-tabs: Portraits vs Collages -->
+    <div class="subtabs">
+      <button class="subtab active" id="tabPortraits">
+        <span data-k="👤 Оқушылар / Портреттер" data-r="👤 Ученики / Портреты">👤 Оқушылар / Портреттер</span>
+        <span class="badgeCount" id="tabPortCount">0</span>
+      </button>
+      <button class="subtab" id="tabCollages">
+        <span data-k="👥 Топтық фотолар / Коллаж (AI)" data-r="👥 Групповые фото / Коллаж (AI)">👥 Топтық фотолар / Коллаж (AI)</span>
+        <span class="badgeCount" id="tabCollCount">0</span>
+      </button>
+    </div>
+
+    <!-- View 1: Portraits & Teacher -->
+    <div class="portraitsView" id="portraitsView">
+      <!-- Teacher Block (if detected) -->
+      <div class="teacherBlock" id="teacherBlock">
+        <div class="teacherInfo">
+          <div class="teacherAvatar" id="teacherAvatar">👑</div>
+          <div class="teacherDetails">
+            <div class="teacherBadge" data-k="👑 Сынып жетекшісі" data-r="👑 Классный руководитель">👑 Сынып жетекшісі</div>
+            <div class="teacherName" id="teacherName">—</div>
+            <div class="teacherFrame" id="teacherFrame">—</div>
+          </div>
+        </div>
+        <div class="teacherActions">
+          <span class="badge found" id="teacherStatus">✓ Табылды</span>
+          <button class="btnSmall edit" id="btnEditTeacher" data-k="✎ Өзгерту" data-r="✎ Изменить">✎ Өзгерту</button>
+          <button class="btnSmall" id="btnDemoteTeacher" title="Оқушы ету / Сделать учеником">👤</button>
+        </div>
+      </div>
+
+      <div class="listhead">
+        <h2 data-k="Оқушылар тізімі" data-r="Список учеников">Оқушылар тізімі</h2>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btnSmall" id="btnAddTeacher" style="display:none;" data-k="+ Мұғалім қосу" data-r="+ Добавить учителя">+ Мұғалім қосу</button>
+          <input class="search" id="search" placeholder="Іздеу...">
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>№</th>
+              <th data-k="Аты-жөні" data-r="Фамилия и имя">Аты-жөні</th>
+              <th data-k="Фото нөмірі" data-r="Номер фото">Фото нөмірі</th>
+              <th data-k="Статус" data-r="Статус">Статус</th>
+              <th data-k="Әрекет" data-r="Действие">Әрекет</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- View 2: AI Collages -->
+    <div class="collagesView" id="collagesView">
+      <div class="aiActionBar">
+        <button class="btnRunAi" id="btnRunAi">
+          <span>✨</span>
+          <span data-k="Топтық фотоларды AI талдау" data-r="ИИ анализ групповых фото">Топтық фотоларды AI талдау</span>
+        </button>
+        <div class="aiStatsSummary">
+          <div><span data-k="Кандидаттар:" data-r="Кандидатов:">Кандидаттар:</span> <b id="aiTotalCandidates">0</b></div>
+          <div><span data-k="Сериялар:" data-r="Серий:">Сериялар:</span> <b id="aiTotalSeries">0</b></div>
+          <div><span data-k="Экспортқа:" data-r="К экспорту:">Экспортқа:</span> <b id="aiTotalExport">0</b></div>
+        </div>
+      </div>
+
+      <!-- Live AI Progress Bar -->
+      <div class="aiProgressBox" id="aiProgressBox">
+        <div class="aiProgressHeader">
+          <span id="aiProgressStatus" data-k="Талдау жүруде..." data-r="Идет анализ...">Талдау жүруде...</span>
+          <b id="aiProgressPercent">0%</b>
+        </div>
+        <div class="aiProgressTrack">
+          <div class="aiProgressFill" id="aiProgressFill"></div>
+        </div>
+      </div>
+
+      <!-- Collages Series List -->
+      <div class="seriesList" id="seriesList">
+        <div class="emptyCollageState" id="emptyCollageState">
+          <div style="font-size:32px;">👥</div>
+          <b data-k="Топтық фотолар әлі талданбаған" data-r="Групповые фото еще не проанализированы">Топтық фотолар әлі талданбаған</b>
+          <p style="margin:0; font-size:12px; max-width:440px;" data-k="Фото папкасын таңдап, топтамаларды автоматты анықтау және үздік кадрларды іріктеу үшін «Топтық фотоларды AI талдау» батырмасын басыңыз." data-r="Выберите папку с фото и нажмите «ИИ анализ групповых фото» для автоматического разделения на серии и выбора лучших кадров.">
+            Фото папкасын таңдап, топтамаларды автоматты анықтау және үздік кадрларды іріктеу үшін «Топтық фотоларды AI талдау» батырмасын басыңыз.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right Column: Stage & Actions -->
+  <aside class="card preview">
+    <div class="stage" id="stage">
+      <div class="empty" data-k="Фото папкасын таңдаңыз" data-r="Выберите папку с фотографиями">Фото папкасын таңдаңыз</div>
+    </div>
+    <div class="filmHead">
+      <b data-k="Алдын ала қарау" data-r="Предпросмотр">Алдын ала қарау</b>
+      <span id="position">0 / 0</span>
+    </div>
+    <div class="film" id="film"></div>
+    <div class="gender">
+      <button id="boy" data-k="Ұл (1)" data-r="Мальчик (1)">Ұл (1)</button>
+      <button id="girl" data-k="Қыз (2)" data-r="Девочка (2)">Қыз (2)</button>
+    </div>
+    <button class="wide" id="clear" data-k="Белгіні алып тастау" data-r="Снять отметку">Белгіні алып тастау</button>
+    <button class="wide" id="editCurrent" data-k="✎ ФИ өзгерту" data-r="✎ Изменить ФИ">✎ ФИ өзгерту</button>
+    <button class="wide primary" id="export" data-k="Порт / Мод / Коллаж папкаларына сақтау" data-r="Сохранить в папки Порт / Мод / Коллаж">Порт / Мод / Коллаж папкаларына сақтау</button>
+    <div class="hintBox">Пернелер / Клавиши: [↑/↓] Таңдау, [1/2] Жыныс, [E] Өзгерту, [Space] Сақтау</div>
+  </aside>
+</div></div>
+
+<!-- Edit Student / Teacher Modal -->
+<div class="modalBg" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle" data-k="Мәліметтерді өзгерту" data-r="Изменить данные">Мәліметтерді өзгерту</h2>
+    <div class="form">
+      <label><span data-k="Тегі" data-r="Фамилия">Тегі</span><input id="surname"></label>
+      <label><span data-k="Аты" data-r="Имя">Аты</span><input id="firstName"></label>
+      <label style="grid-column:1/3"><span data-k="Әкесінің аты (егер бар болса)" data-r="Отчество (если есть)">Әкесінің аты</span><input id="patronymic"></label>
+      <label style="grid-column:1/3"><span data-k="Фото нөмірлері (мысалы: 7113 немесе 7113, 7114)" data-r="Номера фотографий (например: 7113 или 7113, 7114)">Фото нөмірлері</span><input id="numbers"></label>
+      <label style="grid-column:1/3"><span data-k="Рөлі" data-r="Роль">Рөлі</span>
+        <select id="modalRole">
+          <option value="student" data-k="Оқушы" data-r="Ученик">Оқушы</option>
+          <option value="teacher" data-k="Сынып жетекшісі / Мұғалім" data-r="Классный руководитель / Учитель">Сынып жетекшісі / Мұғалім</option>
+        </select>
+      </label>
+    </div>
+    <footer>
+      <button id="cancel" data-k="Болдырмау" data-r="Отмена">Болдырмау</button>
+      <button class="save" id="save" data-k="Сақтау" data-r="Сохранить">Сақтау</button>
+    </footer>
+  </div>
+</div>
 
 <!-- Settings & License Modal -->
 <div class="modalBg" id="settingsModal">
@@ -78,17 +459,35 @@
 <div id="toast"></div>
 
 <script>
-const api=window.vinetkaDesktop;
-let lang=localStorage.getItem('vk-lang')||'kk', theme=localStorage.getItem('vk-theme')||'dark';
-let students=[], photos=[], selected='', isExporting=false;
-const photoIndex = new Map();
+const api = window.vinetkaDesktop;
+let lang = localStorage.getItem('vk-lang') || 'kk';
+let theme = localStorage.getItem('vk-theme') || 'dark';
+
+// State
+let students = [];
+let teacher = null;
+let photos = [];
+let currentPhotoFolder = '';
+let suggestedFolder = null;
+let selected = ''; // student id or 'teacher' or collage series id
+let previewStageMode = 'student'; // 'student' | 'teacher' | 'collage'
+let previewStagePhoto = null;
+let collages = [];
+let activeSubtab = 'portraits';
+let isExporting = false;
+let isAnalyzingAi = false;
 let currentLicInfo = null;
 
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const clean=s=>String(s).replace(/[_|;:,()[\]{}]+/g,' ').replace(/\s+/g,' ').trim();
+const photoIndex = new Map();
+const photoByName = new Map();
 
-function renderLicenseBadge(info){
-  if(!info) return;
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clean = s => String(s || '').replace(/[_|;:,()[\]{}]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+// License UI
+function renderLicenseBadge(info) {
+  if (!info) return;
   currentLicInfo = info;
   const badge = $('#licBadge');
   const textEl = $('#licText');
@@ -115,17 +514,16 @@ function renderLicenseBadge(info){
     textEl.textContent = isKk ? 'Тексерілуде...' : 'Проверка...';
   }
 
-  // Update Settings Modal fields if open
   $('#setLicStatus').textContent = textEl.textContent;
   $('#setLicDays').textContent = days !== null ? (isKk ? `${days} күн қалды` : `${days} дней осталось`) : '—';
   $('#setLicCustomer').textContent = info.customer || (isKk ? 'Стандарт' : 'Стандарт');
   $('#setLicKey').textContent = info.licenseKey || '—';
 }
 
-function openSettingsModal(){
+function openSettingsModal() {
   $('#setLicMsg').textContent = '';
   $('#newLicenseKey').value = '';
-  if(currentLicInfo) renderLicenseBadge(currentLicInfo);
+  if (currentLicInfo) renderLicenseBadge(currentLicInfo);
   $('#settingsModal').classList.add('show');
 }
 
@@ -137,7 +535,7 @@ $('#btnActivateKey').onclick = async () => {
   const code = $('#newLicenseKey').value.trim();
   const msgEl = $('#setLicMsg');
   const isKk = lang === 'kk';
-  if(!code){
+  if (!code) {
     msgEl.className = 'licMsg err';
     msgEl.textContent = isKk ? 'Кілтті енгізіңіз' : 'Введите лицензионный ключ';
     return;
@@ -147,7 +545,7 @@ $('#btnActivateKey').onclick = async () => {
 
   try {
     const res = await api.verifyLicense(code);
-    if(res.ok){
+    if (res.ok) {
       msgEl.className = 'licMsg ok';
       msgEl.textContent = isKk ? 'Лицензия сәтті іске қосылды!' : 'Лицензия успешно активирована!';
       notify(isKk ? 'Лицензия белсендірілді' : 'Лицензия активирована');
@@ -163,208 +561,916 @@ $('#btnActivateKey').onclick = async () => {
       };
       msgEl.textContent = msgs[res.error] || (isKk ? 'Лицензия қате' : 'Ошибка лицензии');
     }
-  } catch(e) {
+  } catch (e) {
     msgEl.className = 'licMsg err';
     msgEl.textContent = isKk ? 'Интернетті тексеріңіз' : 'Проверьте интернет';
   }
 };
 
 $('#btnCheckUpdate').onclick = () => {
-  if(api && api.checkForUpdates) api.checkForUpdates();
+  if (api && api.checkForUpdates) api.checkForUpdates();
 };
 
-if(api && api.getLicenseStatus){
+if (api && api.getLicenseStatus) {
   api.getLicenseStatus().then(renderLicenseBadge);
 }
-if(api && api.onLicenseUpdate){
+if (api && api.onLicenseUpdate) {
   api.onLicenseUpdate(renderLicenseBadge);
 }
 
-function photoNo(n){
-  return([...n.replace(/\.[^.]+$/,'').matchAll(/(\d{3,6})(?!\d)/g)].map(x=>x[1]).at(-1)||'');
+// Number & Photo Indexing
+function photoNo(n) {
+  return ([...n.replace(/\.[^.]+$/, '').matchAll(/(\d{3,6})(?!\d)/g)].map(x => x[1]).at(-1) || '');
 }
 
-function rebuildPhotoIndex(){
+function rebuildPhotoIndex() {
   photoIndex.clear();
-  for(const p of photos){
-    if(p.number) photoIndex.set(p.number, p);
+  photoByName.clear();
+  for (const p of photos) {
+    photoByName.set(p.name, p);
+    if (p.number) {
+      photoIndex.set(p.number, p);
+      const unpadded = String(parseInt(p.number, 10));
+      if (unpadded !== p.number && !photoIndex.has(unpadded)) {
+        photoIndex.set(unpadded, p);
+      }
+    }
   }
 }
 
-function parseLine(line,i){
-  const source=line.trim();
-  if(source.length<3)return null;
-  const nums=[...new Set([...source.matchAll(/(?:IMG|DSC|PHOTO|ФОТО|КАДР)?[_\-\s#№]*(\d{3,6})(?!\d)/gi)].map(m=>m[1]))];
-  let n=source.replace(/^\s*(?:№\s*)?\d{1,3}\s*[.)\-–—:]?\s*/u,'').replace(/(?:IMG|DSC|PHOTO|ФОТО|КАДР)?[_\-\s#№]*\d{3,6}(?:\.(?:jpe?g|png|heic|cr2|cr3|nef|arw|dng))?/gi,' ').replace(/\b(?:фото|фотосы|кадр|номер|нөмірі|таңдауы|выбрала|выбрал|photo)\b/gi,' ');
-  const a=clean(n.replace(/[—–\-]+/g,' ')).split(' ').filter(x=>/[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]/.test(x));
-  if(a.length<2)return null;
-  return{id:String(Date.now())+'_'+i,surname:a[0],name:a[1],numbers:nums,gender:'unknown',source};
+function findPhotoByNumber(num) {
+  if (!num) return null;
+  const s = String(num).trim();
+  if (photoIndex.has(s)) return photoIndex.get(s);
+  const unpadded = String(parseInt(s, 10));
+  if (photoIndex.has(unpadded)) return photoIndex.get(unpadded);
+  if (s.length < 4) {
+    const p4 = s.padStart(4, '0');
+    if (photoIndex.has(p4)) return photoIndex.get(p4);
+  }
+  return null;
 }
 
-function match(){
-  for(const s of students){
-    if(!s.numbers.length){
-      s.status = 'review';
+function matchPhotos() {
+  for (const s of students) {
+    if (!s.numbers.length) {
+      s.status = 'missing';
       continue;
     }
-    s.status = s.numbers.every(num => photoIndex.has(num)) ? 'found' : 'review';
+    s.status = s.numbers.every(num => Boolean(findPhotoByNumber(num))) ? 'found' : 'review';
+  }
+
+  if (teacher) {
+    if (!teacher.numbers.length) {
+      teacher.status = 'review';
+    } else {
+      teacher.status = teacher.numbers.every(num => Boolean(findPhotoByNumber(num))) ? 'found' : 'review';
+    }
   }
 }
 
-function current(){
-  return students.find(s=>s.id===selected)||students[0];
+function currentStudent() {
+  if (selected === 'teacher') return null;
+  return students.find(s => s.id === selected) || students[0] || null;
 }
 
-function applyLanguage(){
-  document.body.classList.toggle('light',theme==='light');
-  $$('[data-k]').forEach(e=>e.textContent=e.dataset[lang==='kk'?'k':'r']);
-  $('#lang').textContent=lang==='kk'?'RU':'ҚАЗ';
-  $('#theme').textContent=theme==='dark'?'☀':'☾';
-  $('#pageTitle').textContent=lang==='kk'?'Фото сұрыптау':'Сортировка фотографий';
-  localStorage.setItem('vk-lang',lang);
-  localStorage.setItem('vk-theme',theme);
-  if(currentLicInfo) renderLicenseBadge(currentLicInfo);
+function applyLanguage() {
+  document.body.classList.toggle('light', theme === 'light');
+  $$('[data-k]').forEach(e => {
+    e.textContent = e.dataset[lang === 'kk' ? 'k' : 'r'];
+  });
+  $('#lang').textContent = lang === 'kk' ? 'RU' : 'ҚАЗ';
+  $('#theme').textContent = theme === 'dark' ? '☀' : '☾';
+  $('#pageTitle').textContent = lang === 'kk' ? 'Фото сұрыптау' : 'Сортировка фотографий';
+  localStorage.setItem('vk-lang', lang);
+  localStorage.setItem('vk-theme', theme);
+  if (currentLicInfo) renderLicenseBadge(currentLicInfo);
 }
 
-function notify(text){
-  $('#toast').innerHTML='<div class="toast">✓ '+text+'</div>';
-  setTimeout(()=>$('#toast').innerHTML='',3000);
+function notify(text) {
+  $('#toast').innerHTML = '<div class="toast">✓ ' + text + '</div>';
+  setTimeout(() => $('#toast').innerHTML = '', 3500);
 }
 
-function renderTableRowsOnly(){
-  const q=$('#search').value.toLowerCase().trim();
-  const list = q ? students.filter(s=>(s.surname+' '+s.name+' '+s.numbers.join(' ')).toLowerCase().includes(q)) : students;
-  
+// Render Teacher Card
+function renderTeacher() {
+  const block = $('#teacherBlock');
+  const btnAdd = $('#btnAddTeacher');
+
+  if (!teacher) {
+    block.classList.remove('show');
+    btnAdd.style.display = 'inline-block';
+    return;
+  }
+
+  block.classList.add('show');
+  btnAdd.style.display = 'none';
+
+  block.classList.toggle('sel', selected === 'teacher');
+  $('#teacherName').textContent = teacher.fullName || (teacher.surname + ' ' + teacher.name);
+  $('#teacherFrame').textContent = (lang === 'kk' ? 'Кадр: ' : 'Кадр: ') + (teacher.numbers.join(', ') || '—');
+
+  const statusBadge = $('#teacherStatus');
+  if (teacher.status === 'found') {
+    statusBadge.className = 'badge found';
+    statusBadge.textContent = lang === 'kk' ? '✓ Табылды' : '✓ Найдено';
+  } else {
+    statusBadge.className = 'badge review';
+    statusBadge.textContent = lang === 'kk' ? '⚠ Тексеру' : '⚠ Проверить';
+  }
+
+  // Teacher avatar
+  let p = null;
+  if (teacher.numbers.length) {
+    p = findPhotoByNumber(teacher.numbers[0]);
+  }
+  const avatarEl = $('#teacherAvatar');
+  if (p && p.url) {
+    avatarEl.innerHTML = `<img src="${p.url}">`;
+  } else {
+    avatarEl.innerHTML = '👑';
+  }
+}
+
+// Render Students Table
+function renderTableRowsOnly() {
+  const q = $('#search').value.toLowerCase().trim();
+  const list = q ? students.filter(s => (s.surname + ' ' + s.name + ' ' + (s.patronymic || '') + ' ' + s.numbers.join(' ')).toLowerCase().includes(q)) : students;
+
   let html = '';
-  for(let i=0; i<list.length; i++){
+  for (let i = 0; i < list.length; i++) {
     const s = list[i];
     const isSel = s.id === selected;
-    html += `<tr data-id="${s.id}" class="${isSel?'sel':''}">
-      <td>${i+1}</td>
-      <td><i class="avatar">${s.name[0]||'?'}</i><b>${s.surname} ${s.name}</b></td>
-      <td>${s.numbers.join(', ')||'—'}</td>
-      <td><span class="badge ${s.status}">${s.status==='found'?(lang==='kk'?'✓ Табылды':'✓ Найдено'):(lang==='kk'?'⚠ Тексеру':'⚠ Проверить')}</span></td>
-      <td><button class="edit" data-edit="${s.id}">✎ ${lang==='kk'?'Өзгерту':'Изменить'}</button></td>
+    let badgeClass = s.status === 'found' ? 'found' : (s.status === 'missing' ? 'missing' : 'review');
+    let badgeText = s.status === 'found' ? (lang === 'kk' ? '✓ Табылды' : '✓ Найдено') : (s.status === 'missing' ? (lang === 'kk' ? '— Жоқ' : '— Нет') : (lang === 'kk' ? '⚠ Тексеру' : '⚠ Проверить'));
+
+    html += `<tr data-id="${s.id}" class="${isSel ? 'sel' : ''}">
+      <td>${i + 1}</td>
+      <td><i class="avatar">${s.name[0] || '?'}</i><b>${s.surname} ${s.name}</b> ${s.patronymic ? `<small style="color:var(--muted)">${s.patronymic}</small>` : ''}</td>
+      <td>${s.numbers.join(', ') || '—'}</td>
+      <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+      <td>
+        <button class="btnSmall edit" data-edit="${s.id}">✎ ${lang === 'kk' ? 'Өзгерту' : 'Изменить'}</button>
+      </td>
     </tr>`;
   }
-  $('#rows').innerHTML = html;
+  $('#rows').innerHTML = html || `<tr><td colspan="5" style="text-align:center; padding:24px; color:var(--muted);">${lang === 'kk' ? 'Оқушылар табылмады' : 'Ученики не найдены'}</td></tr>`;
 }
 
-function render(){
-  match();
+// Render Preview Stage & Filmstrip
+function renderPreview() {
+  if (previewStageMode === 'collage' && previewStagePhoto) {
+    $('#stage').innerHTML = `<img src="${previewStagePhoto.url}">
+      <div class="photoMeta">
+        <b>${previewStagePhoto.name}</b>
+        <small>${previewStagePhoto.title || ''}</small>
+      </div>`;
+    $('#position').textContent = '—';
+    $('#film').innerHTML = '';
+    return;
+  }
+
+  if (selected === 'teacher' && teacher) {
+    let p = null;
+    if (teacher.numbers.length) {
+      p = findPhotoByNumber(teacher.numbers[0]);
+    }
+    $('#stage').innerHTML = p ? `<img src="${p.url}"><div class="photoMeta"><b>${p.name}</b><small>👑 ${teacher.fullName || teacher.surname + ' ' + teacher.name} · ${p.number}</small></div>` : `<div class="empty">${lang === 'kk' ? 'Мұғалімнің фотосы табылмады' : 'Фотография учителя не найдена'}</div>`;
+    $('#position').textContent = '👑';
+    $('#film').innerHTML = '';
+    $('#boy').classList.remove('active');
+    $('#girl').classList.remove('active');
+    return;
+  }
+
+  const c = currentStudent();
+  let p = null;
+  if (c && c.numbers.length) {
+    for (const n of c.numbers) {
+      const found = findPhotoByNumber(n);
+      if (found) { p = found; break; }
+    }
+  }
+
+  $('#stage').innerHTML = p ? `<img src="${p.url}"><div class="photoMeta"><b>${p.name}</b><small>${c.surname} ${c.name} · ${p.number}</small></div>` : `<div class="empty">${lang === 'kk' ? 'Сәйкес фото табылмады' : 'Подходящее фото не найдено'}</div>`;
+
+  const idx = Math.max(0, students.findIndex(s => s.id === selected));
+  $('#position').textContent = students.length ? (idx + 1) + ' / ' + students.length : '0 / 0';
+
+  const start = Math.max(0, Math.min(idx - 2, students.length - 5));
+  $('#film').innerHTML = students.slice(start, start + 5).map(s => {
+    let x = null;
+    for (const n of s.numbers) {
+      const found = findPhotoByNumber(n);
+      if (found) { x = found; break; }
+    }
+    return `<button class="thumb ${s.id === selected ? 'active' : ''}" data-thumb="${s.id}">${x ? `<img src="${x.url}">` : `<b>${s.name[0] || '?'}</b>`}<span>${s.numbers[0] || '—'}</span></button>`;
+  }).join('');
+
+  $$('[data-thumb]').forEach(b => b.onclick = () => {
+    selectStudent(b.dataset.thumb);
+  });
+
+  $('#boy').classList.toggle('active', c?.gender === 'boy');
+  $('#girl').classList.toggle('active', c?.gender === 'girl');
+}
+
+function render() {
+  matchPhotos();
+  renderTeacher();
   renderTableRowsOnly();
 
-  const found=students.filter(s=>s.status==='found').length;
-  $('#studentCount').textContent=$('#sumAll').textContent=students.length;
-  $('#photoCount').textContent=photos.length;
-  $('#sumFound').textContent=found;
-  $('#sumReview').textContent=students.length-found;
-  $('#sumPct').textContent=(students.length?Math.round(found/students.length*100):0)+'%';
+  const found = students.filter(s => s.status === 'found').length;
+  $('#studentCount').textContent = $('#sumAll').textContent = students.length;
+  $('#tabPortCount').textContent = students.length;
+  $('#photoCount').textContent = photos.length;
+  $('#sumFound').textContent = found;
+  $('#sumReview').textContent = students.length - found;
+  $('#sumPct').textContent = (students.length ? Math.round(found / students.length * 100) : 0) + '%';
+
   renderPreview();
+  renderCollageSummary();
 }
 
-function selectStudent(id){
+function selectStudent(id) {
   selected = id;
+  previewStageMode = 'student';
   const prev = $('#rows tr.sel');
-  if(prev) prev.classList.remove('sel');
+  if (prev) prev.classList.remove('sel');
   const curr = $(`#rows tr[data-id="${id}"]`);
-  if(curr){
+  if (curr) {
     curr.classList.add('sel');
     curr.scrollIntoView({ block: 'nearest', behavior: 'auto' });
   }
+  $('#teacherBlock').classList.remove('sel');
   renderPreview();
 }
 
+function selectTeacher() {
+  selected = 'teacher';
+  previewStageMode = 'teacher';
+  const prev = $('#rows tr.sel');
+  if (prev) prev.classList.remove('sel');
+  $('#teacherBlock').classList.add('sel');
+  renderPreview();
+}
+
+// Table interactions
 $('#rows').onclick = (e) => {
   const editBtn = e.target.closest('[data-edit]');
-  if(editBtn){
-    selected = editBtn.dataset.edit;
-    openEdit();
+  if (editBtn) {
+    selectStudent(editBtn.dataset.edit);
+    openEditModal('student');
     return;
   }
   const row = e.target.closest('tr[data-id]');
-  if(row){
+  if (row) {
     selectStudent(row.dataset.id);
   }
 };
 
-function renderPreview(){
-  const c=current();
-  let p = null;
-  if(c && c.numbers.length){
-    for(const n of c.numbers){
-      if(photoIndex.has(n)){
-        p = photoIndex.get(n);
-        break;
-      }
-    }
+$('#teacherBlock').onclick = (e) => {
+  if (e.target.closest('#btnEditTeacher')) {
+    selectTeacher();
+    openEditModal('teacher');
+    return;
   }
+  if (e.target.closest('#btnDemoteTeacher')) {
+    demoteTeacherToStudent();
+    return;
+  }
+  selectTeacher();
+};
 
-  $('#stage').innerHTML=p?`<img src="${p.url}"><div class="photoMeta"><b>${p.name}</b><small>${c.surname} ${c.name} · ${p.number}</small></div>`:`<div class="empty">${lang==='kk'?'Сәйкес фото табылмады':'Подходящее фото не найдено'}</div>`;
-  
-  const idx=Math.max(0,students.findIndex(s=>s.id===selected));
-  $('#position').textContent=students.length?(idx+1)+' / '+students.length:'0 / 0';
-  
-  const start=Math.max(0,Math.min(idx-2,students.length-5));
-  $('#film').innerHTML=students.slice(start,start+5).map(s=>{
-    let x = null;
-    for(const n of s.numbers){
-      if(photoIndex.has(n)){ x = photoIndex.get(n); break; }
-    }
-    return`<button class="thumb ${s.id===selected?'active':''}" data-thumb="${s.id}">${x?`<img src="${x.url}">`:`<b>${s.name[0]||'?'}</b>`}<span>${s.numbers[0]||'—'}</span></button>`;
-  }).join('');
-  
-  $$('[data-thumb]').forEach(b=>b.onclick=()=>{
-    selectStudent(b.dataset.thumb);
-  });
-  
-  $('#boy').classList.toggle('active',c?.gender==='boy');
-  $('#girl').classList.toggle('active',c?.gender==='girl');
+$('#btnAddTeacher').onclick = () => {
+  teacher = {
+    id: 'teacher_' + Date.now(),
+    surname: lang === 'kk' ? 'Мұғалім' : 'Учитель',
+    name: '',
+    patronymic: '',
+    fullName: lang === 'kk' ? 'Мұғалім' : 'Учитель',
+    numbers: [],
+    role: 'teacher',
+    status: 'review'
+  };
+  selectTeacher();
+  openEditModal('teacher');
+};
+
+function demoteTeacherToStudent() {
+  if (!teacher) return;
+  const s = {
+    ...teacher,
+    id: 'student_' + Date.now(),
+    role: 'student',
+    gender: 'unknown'
+  };
+  students.unshift(s);
+  teacher = null;
+  selected = s.id;
+  render();
+  notify(lang === 'kk' ? 'Мұғалім оқушылар қатарына қосылды' : 'Учитель перенесен в список учеников');
 }
 
-function openEdit(){
-  const c=current();
-  if(!c)return;
-  $('#surname').value=c.surname;
-  $('#firstName').value=c.name;
-  $('#numbers').value=c.numbers.join(', ');
+// Modal handling
+let editingMode = 'student'; // 'student' | 'teacher'
+
+function openEditModal(mode = 'student') {
+  editingMode = mode;
+  if (mode === 'teacher') {
+    if (!teacher) return;
+    $('#modalTitle').textContent = lang === 'kk' ? 'Мұғалім мәліметтерін өзгерту' : 'Изменить данные учителя';
+    $('#surname').value = teacher.surname || '';
+    $('#firstName').value = teacher.name || '';
+    $('#patronymic').value = teacher.patronymic || '';
+    $('#numbers').value = teacher.numbers.join(', ');
+    $('#modalRole').value = 'teacher';
+  } else {
+    const c = currentStudent();
+    if (!c) return;
+    $('#modalTitle').textContent = lang === 'kk' ? 'Оқушы мәліметтерін өзгерту' : 'Изменить данные ученика';
+    $('#surname').value = c.surname || '';
+    $('#firstName').value = c.name || '';
+    $('#patronymic').value = c.patronymic || '';
+    $('#numbers').value = c.numbers.join(', ');
+    $('#modalRole').value = 'student';
+  }
   $('#modal').classList.add('show');
 }
 
-function mark(g){
-  const c=current();
-  if(!c)return;
-  c.gender=g;
-  const i=students.indexOf(c);
-  if(g!=='unknown'&&students[i+1]){
-    selectStudent(students[i+1].id);
+$('#editCurrent').onclick = () => {
+  if (selected === 'teacher') openEditModal('teacher');
+  else openEditModal('student');
+};
+
+$('#cancel').onclick = () => $('#modal').classList.remove('show');
+
+$('#save').onclick = () => {
+  const surname = clean($('#surname').value);
+  const firstName = clean($('#firstName').value);
+  const patronymic = clean($('#patronymic').value);
+  const numbers = $('#numbers').value.split(/[,;\s/]+/).map(x => x.replace(/\D/g, '')).filter(Boolean);
+  const newRole = $('#modalRole').value;
+
+  if (editingMode === 'teacher') {
+    if (newRole === 'student') {
+      // Convert teacher to student
+      students.unshift({
+        id: 'student_' + Date.now(),
+        surname,
+        name: firstName,
+        patronymic,
+        fullName: [surname, firstName, patronymic].filter(Boolean).join(' '),
+        numbers,
+        gender: 'unknown',
+        role: 'student'
+      });
+      teacher = null;
+      selected = students[0].id;
+    } else {
+      teacher.surname = surname;
+      teacher.name = firstName;
+      teacher.patronymic = patronymic;
+      teacher.fullName = [surname, firstName, patronymic].filter(Boolean).join(' ');
+      teacher.numbers = numbers;
+    }
+  } else {
+    const c = currentStudent();
+    if (!c) return;
+    if (newRole === 'teacher') {
+      // Promote student to teacher
+      teacher = {
+        id: 'teacher_' + Date.now(),
+        surname,
+        name: firstName,
+        patronymic,
+        fullName: [surname, firstName, patronymic].filter(Boolean).join(' '),
+        numbers,
+        role: 'teacher'
+      };
+      students = students.filter(s => s.id !== c.id);
+      selected = 'teacher';
+    } else {
+      c.surname = surname;
+      c.name = firstName;
+      c.patronymic = patronymic;
+      c.fullName = [surname, firstName, patronymic].filter(Boolean).join(' ');
+      c.numbers = numbers;
+    }
+  }
+
+  $('#modal').classList.remove('show');
+  render();
+  notify(lang === 'kk' ? 'Өзгеріс сақталды' : 'Изменения сохранены');
+};
+
+function mark(g) {
+  const c = currentStudent();
+  if (!c) return;
+  c.gender = g;
+  const i = students.indexOf(c);
+  if (g !== 'unknown' && students[i + 1]) {
+    selectStudent(students[i + 1].id);
   } else {
     renderPreview();
   }
 }
 
-$('#loadList').onclick=async()=>{
-  const r=await api.selectListFile();
-  if(r.canceled)return;
-  const parsed=r.text.split(/\r?\n/).map(parseLine).filter(Boolean);
-  if(!parsed.length)return notify(lang==='kk'?'Тізім оқылмады':'Не удалось прочитать список');
-  students=parsed;
-  selected=students[0].id;
-  $('#listFile').textContent=r.name;
-  render();
-  notify(lang==='kk'?'Тізім жүктелді':'Список загружен');
+$('#boy').onclick = () => mark('boy');
+$('#girl').onclick = () => mark('girl');
+$('#clear').onclick = () => mark('unknown');
+
+// Sub-tabs switching
+$('#tabPortraits').onclick = () => {
+  activeSubtab = 'portraits';
+  $('#tabPortraits').classList.add('active');
+  $('#tabCollages').classList.remove('active');
+  $('#portraitsView').classList.remove('hidden');
+  $('#collagesView').classList.remove('active');
 };
 
-$('#loadPhotos').onclick=async()=>{
-  const r=await api.selectPhotoFolder();
-  if(r.canceled)return;
-  photos=r.photos.map(p=>({...p,number:photoNo(p.name),sourcePath:p.path}));
+$('#tabCollages').onclick = () => {
+  activeSubtab = 'collages';
+  $('#tabCollages').classList.add('active');
+  $('#tabPortraits').classList.remove('active');
+  $('#portraitsView').classList.add('hidden');
+  $('#collagesView').classList.add('active');
+};
+
+// Handle List Loading
+function handleListResult(r) {
+  if (!r || r.canceled) return;
+  if (!r.students || !r.students.length) {
+    return notify(lang === 'kk' ? 'Тізімнен ешқандай оқушы табылмады' : 'В списке не найдено учеников');
+  }
+
+  students = r.students;
+  teacher = r.teacher || null;
+  selected = teacher ? 'teacher' : (students[0]?.id || '');
+  $('#listFile').textContent = r.fileName || r.filePath || '—';
+  $('#listFile').title = r.filePath || '';
+
+  // Auto-suggest adjacent photo folder
+  if (r.suggestedPhotoFolder && r.suggestedPhotoFolder.folder) {
+    suggestedFolder = r.suggestedPhotoFolder.folder;
+    $('#suggestPath').textContent = `${suggestedFolder} (${r.suggestedPhotoFolder.photoCount} фото)`;
+    $('#suggestBanner').classList.add('show');
+  } else {
+    $('#suggestBanner').classList.remove('show');
+    suggestedFolder = r.directory || null;
+  }
+
+  render();
+  notify((lang === 'kk' ? 'Тізім жүктелді: ' : 'Загружен список: ') + students.length + (teacher ? (lang === 'kk' ? ' + мұғалім' : ' + учитель') : ''));
+}
+
+$('#loadList').onclick = async () => {
+  try {
+    const r = await api.selectListFile();
+    handleListResult(r);
+  } catch (err) {
+    notify('Қате / Ошибка: ' + err.message);
+  }
+};
+
+// Handle Photo Folder Loading
+function handlePhotosResult(r) {
+  if (!r || r.canceled) return;
+  photos = (r.photos || []).map(p => ({
+    ...p,
+    number: photoNo(p.name),
+    sourcePath: p.path
+  }));
+  currentPhotoFolder = r.folder || '';
   rebuildPhotoIndex();
-  $('#photoFolder').textContent=r.folder;
+  $('#photoFolder').textContent = r.folder || '—';
+  $('#photoFolder').title = r.folder || '';
+  $('#suggestBanner').classList.remove('show');
+
   render();
-  notify((lang==='kk'?'Фото жүктелді: ':'Загружено фото: ')+photos.length);
+  notify((lang === 'kk' ? 'Фотолар жүктелді: ' : 'Загружено фото: ') + photos.length);
+}
+
+$('#loadPhotos').onclick = async () => {
+  try {
+    const r = await api.selectPhotoFolder(suggestedFolder || currentPhotoFolder || '');
+    handlePhotosResult(r);
+  } catch (err) {
+    notify('Қате / Ошибка: ' + err.message);
+  }
 };
 
+$('#btnLoadSuggested').onclick = async () => {
+  if (!suggestedFolder) return;
+  try {
+    const r = await api.loadPhotoFolder(suggestedFolder);
+    handlePhotosResult(r);
+  } catch (err) {
+    notify('Қате / Ошибка: ' + err.message);
+  }
+};
+
+// Drag & Drop Setup
+function setupDragAndDrop() {
+  const listCard = $('#listCard');
+  const photoCard = $('#photoCard');
+
+  ['dragenter', 'dragover'].forEach(name => {
+    listCard.addEventListener(name, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      listCard.classList.add('dragover');
+    });
+    photoCard.addEventListener(name, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      photoCard.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(name => {
+    listCard.addEventListener(name, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      listCard.classList.remove('dragover');
+    });
+    photoCard.addEventListener(name, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      photoCard.classList.remove('dragover');
+    });
+  });
+
+  listCard.addEventListener('drop', async (e) => {
+    const files = e.dataTransfer.files;
+    if (!files || !files.length) return;
+    const file = files[0];
+    const filePath = api.getPathForFile(file);
+    if (!filePath) return;
+    try {
+      const r = await api.parseDroppedFile(filePath);
+      handleListResult(r);
+    } catch (err) {
+      notify('Қате / Ошибка: ' + err.message);
+    }
+  });
+
+  photoCard.addEventListener('drop', async (e) => {
+    const files = e.dataTransfer.files;
+    if (!files || !files.length) return;
+    const file = files[0];
+    const filePath = api.getPathForFile(file);
+    if (!filePath) return;
+    try {
+      const r = await api.loadPhotoFolder(filePath);
+      handlePhotosResult(r);
+    } catch (err) {
+      notify('Қате / Ошибка: ' + err.message);
+    }
+  });
+
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', e => e.preventDefault());
+}
+
+// AI Collages Workflow
+function updateAiProgress(data) {
+  const box = $('#aiProgressBox');
+  const fill = $('#aiProgressFill');
+  const status = $('#aiProgressStatus');
+  const pct = $('#aiProgressPercent');
+
+  box.classList.add('show');
+  const percent = Math.min(100, Math.max(0, Math.round(data.percent || 0)));
+  fill.style.width = percent + '%';
+  pct.textContent = percent + '%';
+
+  if (data.stage === 'faces') {
+    status.textContent = lang === 'kk'
+      ? `Жүздер мен анықтықты талдау: ${data.current} / ${data.total}`
+      : `Анализ лиц и резкости: ${data.current} / ${data.total}`;
+  } else if (data.stage === 'clustering') {
+    status.textContent = lang === 'kk' ? 'Серияларға топтастыру...' : 'Группировка по сериям...';
+  } else if (data.stage === 'done') {
+    status.textContent = lang === 'kk' ? 'Талдау аяқталды!' : 'Анализ завершен!';
+    setTimeout(() => box.classList.remove('show'), 1500);
+  }
+}
+
+function renderCollageSummary() {
+  $('#aiTotalCandidates').textContent = collages.reduce((acc, c) => acc + (c.frame_count || 0), 0);
+  $('#aiTotalSeries').textContent = collages.length;
+  $('#tabCollCount').textContent = collages.length;
+  $('#aiTotalExport').textContent = collages.filter(c => c.include_in_export !== false).length;
+}
+
+function renderCollages() {
+  const container = $('#seriesList');
+  const emptyState = $('#emptyCollageState');
+
+  if (!collages.length) {
+    container.innerHTML = '';
+    container.appendChild(emptyState);
+    emptyState.style.display = 'flex';
+    renderCollageSummary();
+    return;
+  }
+
+  emptyState.style.display = 'none';
+  let html = '';
+
+  collages.forEach((series, idx) => {
+    const chosenName = series.chosen_frame || series.recommended_frame;
+    const chosenObj = (series.frames || []).find(f => f.name === chosenName) || series.frames[0];
+    const topPhotoObj = photoByName.get(chosenName) || { url: chosenObj?.path ? `vinetka-photo://local/${btoa(encodeURIComponent(chosenObj.path))}` : '' };
+
+    const metrics = chosenObj ? {
+      sharpness: Math.round(chosenObj.sharpness || 0),
+      faces: chosenObj.faces || 0,
+      eyes: chosenObj.eyes || 0,
+      score: Math.round(chosenObj.score || 0)
+    } : { sharpness: 80, faces: 4, eyes: 4, score: 85 };
+
+    const isIncluded = series.include_in_export !== false;
+
+    html += `<div class="seriesCard" data-series-idx="${idx}">
+      <div class="seriesHeader">
+        <div class="seriesTitle">
+          <span>👥</span>
+          <b>${lang === 'kk' ? 'Серия' : 'Серия'} #${idx + 1} (${series.frame_range})</b>
+          <span style="font-size:11px; color:var(--muted)">· ${series.frame_count} ${lang === 'kk' ? 'кадр' : 'кадров'}</span>
+        </div>
+        <div class="seriesMeta">
+          <select class="seriesCategorySelect" data-cat-idx="${idx}">
+            <option value="SMALL_GROUP" ${series.category === 'SMALL_GROUP' ? 'selected' : ''}>${lang === 'kk' ? 'Шағын топ (3-6 оқушы)' : 'Группа (3-6 учеников)'}</option>
+            <option value="FULL_CLASS" ${series.category === 'FULL_CLASS' ? 'selected' : ''}>${lang === 'kk' ? 'Жалпы сынып (15+ оқушы)' : 'Общий класс (15+ учеников)'}</option>
+            <option value="DYNAMICS" ${series.category === 'DYNAMICS' ? 'selected' : ''}>${lang === 'kk' ? 'Динамика / Эмоция' : 'Динамика / Эмоция'}</option>
+          </select>
+          <label class="seriesExportToggle">
+            <input type="checkbox" data-export-idx="${idx}" ${isIncluded ? 'checked' : ''}>
+            <span>${lang === 'kk' ? 'Экспорт' : 'Экспорт'}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="seriesContent">
+        <div class="recommendedBox">
+          <div class="recommendedBadge">★ ${lang === 'kk' ? 'Таңдалған' : 'Выбран'}</div>
+          <img class="recommendedImg" src="${photoByName.get(chosenName)?.url || ''}" data-preview-img="${chosenName}" title="${chosenName}">
+          <div class="recommendedMeta">
+            <b>${chosenName}</b>
+            <span>${series.orientation || 'Горизонтальная'}</span>
+          </div>
+          <div class="recommendedMetrics">
+            <span class="metricPill good" title="Laplacian Sharpness">🎯 Резкость: ${metrics.sharpness}%</span>
+            <span class="metricPill good" title="Detected open eyes">👀 Көздер: ${metrics.eyes}</span>
+            <span class="metricPill" title="Detected faces">👤 Беттер: ${metrics.faces}</span>
+            <span class="metricPill good" title="Overall score">⭐ ${metrics.score}</span>
+          </div>
+        </div>
+
+        <div class="burstStrip">
+          <div class="burstLabel">${lang === 'kk' ? 'Сериядағы барлық дубльдер (басқасын таңдау үшін басыңыз):' : 'Все дубли серии (нажмите для выбора альтернативы):'}</div>
+          <div class="burstFrames">
+            ${(series.frames || []).map(f => {
+              const pObj = photoByName.get(f.name);
+              const isChosen = f.name === chosenName;
+              const isRec = f.name === series.recommended_frame;
+              return `<div class="burstThumb ${isChosen ? 'chosen' : ''} ${isRec ? 'recommended' : ''}" data-pick-series="${idx}" data-frame-name="${f.name}">
+                <img src="${pObj?.url || ''}" loading="lazy">
+                <div class="burstThumbInfo">
+                  <span>${f.name.replace(/\.[^.]+$/, '').slice(-4)}</span>
+                  <span>${isChosen ? '✓' : (isRec ? '★' : '')}</span>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+  renderCollageSummary();
+
+  // Attach collage card events
+  $$('[data-pick-series]').forEach(el => {
+    el.onclick = () => {
+      const sIdx = Number(el.dataset.pickSeries);
+      const fName = el.dataset.frameName;
+      if (collages[sIdx]) {
+        collages[sIdx].chosen_frame = fName;
+        const pObj = photoByName.get(fName);
+        if (pObj) {
+          previewStageMode = 'collage';
+          previewStagePhoto = {
+            url: pObj.url,
+            name: fName,
+            title: `${lang === 'kk' ? 'Серия' : 'Серия'} #${sIdx + 1} · ${fName}`
+          };
+          renderPreview();
+        }
+        renderCollages();
+      }
+    };
+  });
+
+  $$('[data-preview-img]').forEach(el => {
+    el.onclick = () => {
+      const fName = el.dataset.previewImg;
+      const pObj = photoByName.get(fName);
+      if (pObj) {
+        previewStageMode = 'collage';
+        previewStagePhoto = {
+          url: pObj.url,
+          name: fName,
+          title: fName
+        };
+        renderPreview();
+      }
+    };
+  });
+
+  $$('[data-export-idx]').forEach(chk => {
+    chk.onchange = () => {
+      const idx = Number(chk.dataset.exportIdx);
+      if (collages[idx]) {
+        collages[idx].include_in_export = chk.checked;
+        renderCollageSummary();
+      }
+    };
+  });
+
+  $$('[data-cat-idx]').forEach(sel => {
+    sel.onchange = () => {
+      const idx = Number(sel.dataset.catIdx);
+      if (collages[idx]) {
+        collages[idx].category = sel.value;
+      }
+    };
+  });
+}
+
+$('#btnRunAi').onclick = async () => {
+  if (isAnalyzingAi) return;
+  if (!photos.length || !currentPhotoFolder) {
+    return notify(lang === 'kk' ? 'Алдымен фото папкасын таңдаңыз' : 'Сначала выберите папку с фотографиями');
+  }
+
+  isAnalyzingAi = true;
+  const btn = $('#btnRunAi');
+  btn.disabled = true;
+  btn.innerHTML = `<span>⏳</span><span>${lang === 'kk' ? 'Талдау жүруде...' : 'Анализ...'}</span>`;
+
+  // Exclude all matched portrait and teacher frames
+  const excludeFrames = [];
+  students.forEach(s => excludeFrames.push(...s.numbers));
+  if (teacher) excludeFrames.push(...teacher.numbers);
+
+  try {
+    const res = await api.analyzeCollages({
+      shootDir: currentPhotoFolder,
+      excludeFrames
+    });
+
+    if (res && res.ok && res.series) {
+      collages = res.series;
+      renderCollages();
+      notify((lang === 'kk' ? 'AI талдау аяқталды: сериялар табылды — ' : 'ИИ анализ завершен: найдено серий — ') + collages.length);
+    } else {
+      notify(lang === 'kk' ? 'Топтық фотолар табылмады' : 'Групповые серии не найдены');
+    }
+  } catch (err) {
+    notify('AI қатесі / Ошибка ИИ: ' + err.message);
+  } finally {
+    isAnalyzingAi = false;
+    btn.disabled = false;
+    btn.innerHTML = `<span>✨</span><span>${btn.dataset[lang === 'kk' ? 'k' : 'r']}</span>`;
+  }
+};
+
+if (api && api.onAiProgress) {
+  api.onAiProgress((data) => {
+    updateAiProgress(data);
+  });
+}
+
+// Unified Export Handler
+$('#export').onclick = async () => {
+  if (isExporting) return;
+
+  const readyFiles = [];
+  const usedNames = new Map();
+
+  // 1. Process Students
+  for (const s of students) {
+    // 1st frame -> Порт
+    if (s.numbers.length >= 1) {
+      const p1 = findPhotoByNumber(s.numbers[0]);
+      if (p1) {
+        const ext = p1.name.split('.').pop() || 'jpg';
+        const base = (s.surname + ' ' + s.name).replace(/[<>:"/\\|?*]/g, '_');
+        const key = 'Порт|' + base;
+        const count = (usedNames.get(key) || 0) + 1;
+        usedNames.set(key, count);
+        const outputName = base + (count > 1 ? '_' + count : '') + '.' + ext;
+        readyFiles.push({ sourcePath: p1.sourcePath, outputName, folder: 'Порт' });
+      }
+    }
+
+    // 2nd frame -> Мод
+    if (s.numbers.length >= 2) {
+      const p2 = findPhotoByNumber(s.numbers[1]);
+      if (p2) {
+        const ext = p2.name.split('.').pop() || 'jpg';
+        const base = (s.surname + ' ' + s.name).replace(/[<>:"/\\|?*]/g, '_');
+        const key = 'Мод|' + base;
+        const count = (usedNames.get(key) || 0) + 1;
+        usedNames.set(key, count);
+        const outputName = base + (count > 1 ? '_' + count : '') + '.' + ext;
+        readyFiles.push({ sourcePath: p2.sourcePath, outputName, folder: 'Мод' });
+      }
+    }
+
+    // Subsequent frames -> Мод
+    for (let i = 2; i < s.numbers.length; i++) {
+      const pN = findPhotoByNumber(s.numbers[i]);
+      if (pN) {
+        const ext = pN.name.split('.').pop() || 'jpg';
+        const base = (s.surname + ' ' + s.name).replace(/[<>:"/\\|?*]/g, '_');
+        const key = 'Мод|' + base;
+        const count = (usedNames.get(key) || 0) + 1;
+        usedNames.set(key, count);
+        const outputName = base + (count > 1 ? '_' + count : '') + '.' + ext;
+        readyFiles.push({ sourcePath: pN.sourcePath, outputName, folder: 'Мод' });
+      }
+    }
+  }
+
+  // 2. Process Teacher
+  let teacherPayload = null;
+  if (teacher && teacher.numbers && teacher.numbers.length) {
+    const pTeach = findPhotoByNumber(teacher.numbers[0]);
+    if (pTeach) {
+      const ext = pTeach.name.split('.').pop() || 'jpg';
+      const teachName = (teacher.fullName || teacher.surname + ' ' + teacher.name).replace(/[<>:"/\\|?*]/g, '_');
+      teacherPayload = {
+        sourcePath: pTeach.sourcePath,
+        outputName: teachName + '.' + ext,
+        folder: 'Порт'
+      };
+    }
+  }
+
+  // 3. Process Collages
+  const collagePayload = [];
+  collages.forEach((series, idx) => {
+    if (series.include_in_export === false) return;
+    const chosenName = series.chosen_frame || series.recommended_frame;
+    const fObj = (series.frames || []).find(f => f.name === chosenName) || series.frames?.[0];
+    if (!fObj) return;
+
+    const ext = chosenName.split('.').pop() || 'jpg';
+    const prefix = series.category === 'FULL_CLASS' ? 'Общий_класс' : 'Коллаж';
+    const seriesNum = String(idx + 1).padStart(2, '0');
+    const baseNum = chosenName.replace(/\.[^.]+$/, '');
+    const outputName = `${prefix}_${seriesNum}_${baseNum}.${ext}`;
+
+    collagePayload.push({
+      sourcePath: fObj.path,
+      outputName,
+      folder: 'Коллаж'
+    });
+  });
+
+  if (!readyFiles.length && !teacherPayload && !collagePayload.length) {
+    return notify(lang === 'kk' ? 'Сақтайтын фото жоқ' : 'Нет фотографий для сохранения');
+  }
+
+  const exportBtn = $('#export');
+  isExporting = true;
+  exportBtn.disabled = true;
+  exportBtn.textContent = lang === 'kk' ? 'Сақталуда...' : 'Сохранение...';
+
+  try {
+    const res = await api.saveSorted({
+      files: readyFiles,
+      collages: collagePayload,
+      teacher: teacherPayload
+    });
+
+    const folderInfo = res.folders && res.folders.length ? ` · [${res.folders.join(', ')}]` : '';
+    notify((lang === 'kk' ? 'Сәтті сақталды: ' : 'Успешно сохранено: ') + res.count + ' фото' + folderInfo);
+  } catch (err) {
+    notify('Қате / Ошибка: ' + err.message);
+  } finally {
+    isExporting = false;
+    exportBtn.disabled = false;
+    exportBtn.textContent = exportBtn.dataset[lang === 'kk' ? 'k' : 'r'];
+  }
+};
+
+// Search Filter with debounce
 let searchTimer = null;
 $('#search').oninput = () => {
   clearTimeout(searchTimer);
@@ -373,69 +1479,23 @@ $('#search').oninput = () => {
   }, 100);
 };
 
-$('#lang').onclick=()=>{lang=lang==='kk'?'ru':'kk';applyLanguage();render();};
-$('#theme').onclick=()=>{theme=theme==='dark'?'light':'dark';applyLanguage();};
-$('#editCurrent').onclick=openEdit;
-$('#cancel').onclick=()=>$('#modal').classList.remove('show');
-
-$('#save').onclick=()=>{
-  const c=current();
-  if(!c)return;
-  c.surname=clean($('#surname').value);
-  c.name=clean($('#firstName').value);
-  c.numbers=$('#numbers').value.split(/[,;\s/]+/).map(x=>x.replace(/\D/g,'')).filter(Boolean);
-  $('#modal').classList.remove('show');
+// Language & Theme Toggles
+$('#lang').onclick = () => {
+  lang = lang === 'kk' ? 'ru' : 'kk';
+  applyLanguage();
   render();
-  notify(lang==='kk'?'Өзгеріс сақталды':'Изменения сохранены');
+  renderCollages();
 };
 
-$('#boy').onclick=()=>mark('boy');
-$('#girl').onclick=()=>mark('girl');
-$('#clear').onclick=()=>mark('unknown');
-
-$('#export').onclick=async()=>{
-  if(isExporting) return;
-  const ready=[];
-  for(const s of students){
-    s.numbers.forEach((n, index)=>{
-      const p = photoIndex.get(n);
-      if(p) ready.push({s, index, p});
-    });
-  }
-  
-  if(!ready.length) return notify(lang==='kk'?'Сақтайтын фото жоқ':'Нет фотографий для сохранения');
-  
-  const exportBtn = $('#export');
-  isExporting = true;
-  exportBtn.disabled = true;
-  exportBtn.textContent = lang==='kk'?'Сақталуда...':'Сохранение...';
-
-  try {
-    const used=new Map();
-    const files=ready.map(({s,p,index})=>{
-      const ext=p.name.split('.').pop()||'jpg';
-      const base=(s.surname+' '+s.name).replace(/[<>:"/\\|?*]/g,'_');
-      const folder=index===0?'Порт':'Мод';
-      const key=folder+'|'+base;
-      const num=(used.get(key)||0)+1;
-      used.set(key,num);
-      return{sourcePath:p.sourcePath,outputName:base+(num>1?'_'+num:'')+'.'+ext,folder};
-    });
-
-    const r=await api.saveSorted(files);
-    notify((lang==='kk'?'Сақталды: ':'Сохранено: ')+r.count+' · '+r.folders.join(' / '));
-  } catch(err) {
-    notify('Қате / Ошибка: ' + err.message);
-  } finally {
-    isExporting = false;
-    exportBtn.disabled = false;
-    exportBtn.textContent = exportBtn.dataset[lang==='kk'?'k':'r'];
-  }
+$('#theme').onclick = () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  applyLanguage();
 };
 
+// Keyboard Shortcuts
 window.addEventListener('keydown', (e) => {
-  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-    if(e.key === 'Escape') {
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+    if (e.key === 'Escape') {
       $('#modal').classList.remove('show');
       $('#settingsModal').classList.remove('show');
     }
@@ -446,12 +1506,16 @@ window.addEventListener('keydown', (e) => {
 
   if (e.key === 'ArrowDown') {
     e.preventDefault();
-    if (idx < students.length - 1) {
+    if (selected === 'teacher') {
+      if (students.length) selectStudent(students[0].id);
+    } else if (idx < students.length - 1) {
       selectStudent(students[idx + 1].id);
     }
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
-    if (idx > 0) {
+    if (idx === 0 && teacher) {
+      selectTeacher();
+    } else if (idx > 0) {
       selectStudent(students[idx - 1].id);
     }
   } else if (e.key === '1' || e.code === 'Digit1') {
@@ -459,13 +1523,16 @@ window.addEventListener('keydown', (e) => {
   } else if (e.key === '2' || e.code === 'Digit2') {
     mark('girl');
   } else if (e.key === 'e' || e.key === 'E' || e.key === 'у' || e.key === 'У') {
-    openEdit();
+    if (selected === 'teacher') openEditModal('teacher');
+    else openEditModal('student');
   } else if (e.key === 'Escape') {
     $('#modal').classList.remove('show');
     $('#settingsModal').classList.remove('show');
   }
 });
 
+// Init
+setupDragAndDrop();
 applyLanguage();
 render();
 </script></body></html>
