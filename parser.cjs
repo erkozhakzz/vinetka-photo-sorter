@@ -104,14 +104,23 @@ function extractNameTokens(text) {
 }
 
 const TABLE_HEADER_WORDS = new Set([
-  '№', 'n', 'п', 'р', 'т', 'тегі', 'аты', 'жөні', 'фамилия', 'имя', 'отчество', 'фио',
-  'кадр', 'кадрлар', 'номер', 'номера', 'фото', 'фотолар', 'портрет', 'модель', 'мод', 'порт', 'пол', 'жынысы', 'класс', 'сынып'
+  '№', 'n', 'п', 'р', 'т', 'тегі', 'аты', 'жөні', 'әкесінің', 'әкесі', 'фамилия', 'имя', 'отчество', 'фио', 'ф.и.о',
+  'кадр', 'кадрлар', 'кадрлары', 'номер', 'номера', 'фото', 'фотолар', 'фотолары', 'портрет', 'модель', 'мод', 'порт', 'пол', 'жынысы', 'класс', 'сынып',
+  'оқушы', 'оқушылар', 'ученик', 'ученики', 'список', 'тізім', 'статус', 'бейне', 'ескертпе'
 ]);
 
 function isTableHeaderRow(tokens, numbers) {
   if (numbers && numbers.length > 0) return false;
   if (!tokens || tokens.length === 0) return true;
-  return tokens.every(w => TABLE_HEADER_WORDS.has(w.toLowerCase()));
+  const headerCount = tokens.filter(w => {
+    const low = w.toLowerCase();
+    if (TABLE_HEADER_WORDS.has(low)) return true;
+    if (low.includes('-')) {
+      return low.split('-').every(part => TABLE_HEADER_WORDS.has(part));
+    }
+    return false;
+  }).length;
+  return headerCount >= 1 && (headerCount >= tokens.length / 2 || tokens.every(w => TABLE_HEADER_WORDS.has(w.toLowerCase()) || (w.includes('-') && w.split('-').every(p => TABLE_HEADER_WORDS.has(p)))));
 }
 
 /**
@@ -232,34 +241,41 @@ async function parseDocumentFile(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   let result;
 
-  if (['.xlsx', '.xls', '.csv'].includes(ext)) {
-    const workbook = XLSX.readFile(filePath, { type: 'file', codepage: 65001 });
-    result = parseWorkbook(workbook);
-    result.format = ext.replace('.', '').toUpperCase();
-  } else if (ext === '.docx') {
-    const rawResult = await mammoth.extractRawText({ path: filePath });
-    const lines = rawResult.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    result = parseTextLines(lines);
-    result.format = 'DOCX';
-  } else {
-    // TXT или другие текстовые форматы
-    const buffer = await readFile(filePath);
-    // Пробуем UTF-8, при наличии невалидных последовательностей fallback на windows-1251
-    let text = '';
-    try {
-      const decoder = new TextDecoder('utf-8', { fatal: true });
-      text = decoder.decode(buffer);
-    } catch {
+  try {
+    if (['.xlsx', '.xls', '.csv'].includes(ext)) {
+      const workbook = XLSX.readFile(filePath, { type: 'file', codepage: 65001 });
+      result = parseWorkbook(workbook);
+      result.format = ext.replace('.', '').toUpperCase();
+    } else if (ext === '.docx') {
+      const rawResult = await mammoth.extractRawText({ path: filePath });
+      const lines = rawResult.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      result = parseTextLines(lines);
+      result.format = 'DOCX';
+    } else {
+      // TXT или другие текстовые форматы
+      const buffer = await readFile(filePath);
+      // Пробуем UTF-8, при наличии невалидных последовательностей fallback на windows-1251
+      let text = '';
       try {
-        const decoder1251 = new TextDecoder('windows-1251');
-        text = decoder1251.decode(buffer);
+        const decoder = new TextDecoder('utf-8', { fatal: true });
+        text = decoder.decode(buffer);
       } catch {
-        text = buffer.toString('utf8');
+        try {
+          const decoder1251 = new TextDecoder('windows-1251');
+          text = decoder1251.decode(buffer);
+        } catch {
+          text = buffer.toString('utf8');
+        }
       }
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      result = parseTextLines(lines);
+      result.format = 'TXT';
     }
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    result = parseTextLines(lines);
-    result.format = 'TXT';
+  } catch (err) {
+    if (String(filePath).toLowerCase().includes('onedrive') || err.code === 'EBUSY') {
+      throw new Error('Файл OneDrive бұлтында тек онлайн қолжетімді. Оны ашу үшін файлды тінтуірдің оң жағымен басып, «Әрдайым осы құрылғыда сақтау» (Always keep on this device) таңдап, жүктеп алыңыз.\nФайл в OneDrive доступен только онлайн. Скачайте его локально на устройство.');
+    }
+    throw err;
   }
 
   result.fileName = path.basename(filePath);
