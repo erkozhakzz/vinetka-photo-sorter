@@ -805,9 +805,10 @@ def main():
                 processed += 1
                 if processed % 10 == 0 or processed == total:
                     pct = int((processed / total) * 100)
-                    print(json.dumps({"type": "progress", "current": processed, "total": total, "percent": pct}), flush=True)
+                    print(json.dumps({"type": "progress", "current": processed, "total": total, "percent": pct, "stage": "faces"}), flush=True)
 
         frames_data.sort(key=lambda x: x["frame_num"])
+        print(json.dumps({"type": "progress", "percent": 100, "stage": "done"}), flush=True)
 
         # ЖЕСТКИЙ ФИЛЬТР: оставляем ТОЛЬКО групповые кадры (faces_count >= 2)
         # Одиночные портреты и пустые кадры исключаются из коллажей навсегда!

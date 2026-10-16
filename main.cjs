@@ -610,22 +610,24 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
     }
 
     let outputJson = '';
+    let stdoutBuffer = '';
     const proc = spawn('python', args, { windowsHide: true });
 
     proc.stdout.on('data', (chunk) => {
-      const text = chunk.toString('utf8');
-      const lines = text.split(/\r?\n/);
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
+      stdoutBuffer += chunk.toString('utf8');
+      let nlIndex;
+      while ((nlIndex = stdoutBuffer.indexOf('\n')) !== -1) {
+        const line = stdoutBuffer.slice(0, nlIndex).trim();
+        stdoutBuffer = stdoutBuffer.slice(nlIndex + 1);
+        if (!line) continue;
         try {
-          const parsed = JSON.parse(trimmed);
+          const parsed = JSON.parse(line);
           if (parsed.type === 'progress') {
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.webContents.send('ai:progress', parsed);
             }
           } else if (parsed.type === 'result' || parsed.ok !== undefined) {
-            outputJson = trimmed;
+            outputJson = line;
           }
         } catch {}
       }
@@ -636,6 +638,13 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
     });
 
     proc.on('close', async (code) => {
+      if (stdoutBuffer.trim()) {
+        const line = stdoutBuffer.trim();
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed.ok !== undefined) outputJson = line;
+        } catch {}
+      }
       if (code === 0 && outputJson) {
         try {
           const result = JSON.parse(outputJson);

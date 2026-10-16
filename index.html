@@ -417,7 +417,7 @@ body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111
     <!-- View 2: AI Collages -->
     <div class="collagesView" id="collagesView">
       <div class="aiActionBar">
-        <button class="btnRunAi" id="btnRunAi">
+        <button class="btnRunAi" id="btnRunAi" data-k="Топтық фотоларды AI талдау" data-r="ИИ анализ групповых фото">
           <span>✨</span>
           <span data-k="Топтық фотоларды AI талдау" data-r="ИИ анализ групповых фото">Топтық фотоларды AI талдау</span>
         </button>
@@ -1721,6 +1721,8 @@ function setupDragAndDrop() {
 }
 
 // AI Collages Workflow
+let hasRunCollageAnalysis = false;
+
 function updateAiProgress(data) {
   const box = $('#aiProgressBox');
   const fill = $('#aiProgressFill');
@@ -1732,15 +1734,17 @@ function updateAiProgress(data) {
   fill.style.width = percent + '%';
   pct.textContent = percent + '%';
 
-  if (data.stage === 'faces') {
+  if (data.stage === 'faces' || data.current !== undefined) {
     status.textContent = lang === 'kk'
-      ? `Жүздер мен анықтықты талдау: ${data.current} / ${data.total}`
-      : `Анализ лиц и резкости: ${data.current} / ${data.total}`;
+      ? `Жүздер мен анықтықты талдау: ${data.current || 0} / ${data.total || 0}`
+      : `Анализ лиц и резкости: ${data.current || 0} / ${data.total || 0}`;
   } else if (data.stage === 'clustering') {
     status.textContent = lang === 'kk' ? 'Серияларға топтастыру...' : 'Группировка по сериям...';
-  } else if (data.stage === 'done') {
+  }
+
+  if (data.stage === 'done' || percent >= 100) {
     status.textContent = lang === 'kk' ? 'Талдау аяқталды!' : 'Анализ завершен!';
-    setTimeout(() => box.classList.remove('show'), 1500);
+    setTimeout(() => box.classList.remove('show'), 1200);
   }
 }
 
@@ -1757,6 +1761,27 @@ function renderCollages() {
 
   if (!collages.length) {
     container.innerHTML = '';
+    if (hasRunCollageAnalysis) {
+      emptyState.innerHTML = `
+        <div style="font-size:36px;">⚠️</div>
+        <b style="color:var(--orange);">${lang === 'kk' ? 'Бұл папкада топтық фотолар табылмады' : 'В этой папке не найдено групповых фото'}</b>
+        <p style="margin:0; font-size:12px; max-width:480px; line-height:1.5;">
+          ${lang === 'kk'
+            ? 'Талданған фотолардың барлығы — 1 адамдық жеке портреттер (олар сүзгіден өтті). Коллаждар үшін ортақ және шағын топтық фотолары бар бастапқы папканы таңдаңыз.'
+            : 'Все проверенные фотографии в этой папке являются одиночными портретами (по 1 человеку). Они автоматически исключены из коллажей. Для создания коллажей выберите исходную папку съёмки, содержащую групповые фотографии.'}
+        </p>
+      `;
+    } else {
+      emptyState.innerHTML = `
+        <div style="font-size:32px;">👥</div>
+        <b>${lang === 'kk' ? 'Топтық фотолар әлі талданбаған' : 'Групповые фото еще не проанализированы'}</b>
+        <p style="margin:0; font-size:12px; max-width:440px;">
+          ${lang === 'kk'
+            ? 'Фото папкасын таңдап, топтамаларды автоматты анықтау және үздік кадрларды іріктеу үшін «Топтық фотоларды AI талдау» батырмасын басыңыз.'
+            : 'Выберите папку с фото и нажмите «ИИ анализ групповых фото» для автоматического разделения на серии и выбора лучших кадров.'}
+        </p>
+      `;
+    }
     container.appendChild(emptyState);
     emptyState.style.display = 'flex';
     renderCollageSummary();
@@ -1908,6 +1933,7 @@ $('#btnRunAi').onclick = async () => {
   }
 
   isAnalyzingAi = true;
+  hasRunCollageAnalysis = true;
   const btn = $('#btnRunAi');
   btn.disabled = true;
   btn.innerHTML = `<span>⏳</span><span>${lang === 'kk' ? 'Талдау жүруде...' : 'Анализ...'}</span>`;
@@ -1923,11 +1949,17 @@ $('#btnRunAi').onclick = async () => {
       excludeFrames
     });
 
-    if (res && res.ok && res.series) {
+    if (res && res.ok && Array.isArray(res.series)) {
       collages = res.series;
       renderCollages();
-      notify((lang === 'kk' ? 'AI талдау аяқталды: сериялар табылды — ' : 'ИИ анализ завершен: найдено серий — ') + collages.length);
+      if (collages.length) {
+        notify((lang === 'kk' ? 'AI талдау аяқталды: сериялар табылды — ' : 'ИИ анализ завершен: найдено серий — ') + collages.length);
+      } else {
+        notify(lang === 'kk' ? 'Бұл папкада топтық фотолар жоқ (тек жеке портреттер)' : 'В этой папке нет групповых фото (только портреты)');
+      }
     } else {
+      collages = [];
+      renderCollages();
       notify(lang === 'kk' ? 'Топтық фотолар табылмады' : 'Групповые серии не найдены');
     }
   } catch (err) {
@@ -1935,7 +1967,8 @@ $('#btnRunAi').onclick = async () => {
   } finally {
     isAnalyzingAi = false;
     btn.disabled = false;
-    btn.innerHTML = `<span>✨</span><span>${btn.dataset[lang === 'kk' ? 'k' : 'r']}</span>`;
+    const btnLabel = lang === 'kk' ? (btn.dataset.k || 'Топтық фотоларды AI талдау') : (btn.dataset.r || 'ИИ анализ групповых фото');
+    btn.innerHTML = `<span>✨</span><span>${btnLabel}</span>`;
   }
 };
 
