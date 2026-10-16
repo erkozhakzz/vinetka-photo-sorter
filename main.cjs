@@ -532,13 +532,41 @@ ipcMain.handle('photos:browse-dir', async (_event, targetPath) => {
 });
 
 ipcMain.handle('photos:select-folder', async (_event, defaultPath) => {
-  const options = { properties: ['openDirectory'] };
-  if (defaultPath && typeof defaultPath === 'string') {
-    options.defaultPath = defaultPath;
+  let initial = defaultPath;
+  if (!initial || typeof initial !== 'string') {
+    initial = selectedRoot || app.getPath('pictures');
   }
-  const result = await dialog.showOpenDialog(mainWindow, options);
-  if (result.canceled || !result.filePaths[0]) return { canceled: true, photos: [] };
-  return scanFolderPhotos(result.filePaths[0]);
+  try {
+    const s = await stat(initial);
+    if (!s.isDirectory()) initial = path.dirname(initial);
+  } catch {}
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Фото папкасын таңдаңыз (папкадағы кез келген суретті таңдаңыз) / Выберите фото или папку съемки',
+    defaultPath: initial,
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'Фотосуреттер / Фотографии (*.jpg, *.png, *.cr2, RAW)', extensions: ['jpg', 'jpeg', 'png', 'cr2', 'cr3', 'nef', 'arw', 'dng', 'webp'] },
+      { name: 'Барлық файлдар / Все файлы (*.*)', extensions: ['*'] }
+    ]
+  });
+
+  if (result.canceled || !result.filePaths || !result.filePaths.length) {
+    return { canceled: true, photos: [] };
+  }
+
+  const selectedPath = result.filePaths[0];
+  let targetFolder = selectedPath;
+  try {
+    const s = await stat(selectedPath);
+    if (!s.isDirectory()) {
+      targetFolder = path.dirname(selectedPath);
+    }
+  } catch {
+    targetFolder = path.dirname(selectedPath);
+  }
+
+  return scanFolderPhotos(targetFolder);
 });
 
 ipcMain.handle('photos:load-folder', async (_event, folderPath) => {
