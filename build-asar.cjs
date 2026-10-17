@@ -12,7 +12,7 @@ async function build() {
   fs.mkdirSync(staging, { recursive: true });
 
   console.log('Staging production files...');
-  const files = ['package.json', 'main.cjs', 'preload.cjs', 'parser.cjs', 'index.html', 'license.html', 'icon.png'];
+  const files = ['package.json', 'main.cjs', 'preload.cjs', 'parser.cjs', 'index.html', 'license.html', 'icon.png', 'qr_telegram.svg', 'qr_telegram.png'];
   files.forEach(f => {
     const src = path.join(rootDir, f);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(staging, f));

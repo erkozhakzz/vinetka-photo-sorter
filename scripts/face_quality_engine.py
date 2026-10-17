@@ -37,9 +37,41 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
 MODELS_DIR = PROJECT_DIR / "models"
 
-YUNET_MODEL = MODELS_DIR / "face_detection_yunet_2023mar.onnx"
-DET_FACE_MODEL = MODELS_DIR / "det_face.onnx"
-GENDERAGE_MODEL = MODELS_DIR / "genderage.onnx"
+def get_safe_model_path(model_path: Path) -> Path:
+    """
+    OpenCV DNN on Windows fails to open ONNX models if the path contains non-ASCII (Cyrillic) characters.
+    If model_path contains non-ASCII characters, copy it to %ProgramData%\\VINETKA\\models, which is pure ASCII.
+    """
+    path_str = str(model_path)
+    try:
+        path_str.encode('ascii')
+        return model_path
+    except UnicodeEncodeError:
+        pass
+
+    if not model_path.exists():
+        return model_path
+
+    base_dir = Path(os.environ.get('ALLUSERSPROFILE', 'C:\\ProgramData')) / 'VINETKA' / 'models'
+    try:
+        base_dir.mkdir(parents=True, exist_ok=True)
+        target = base_dir / model_path.name
+        if not target.exists() or target.stat().st_size != model_path.stat().st_size:
+            import shutil
+            shutil.copyfile(model_path, target)
+        return target
+    except Exception:
+        import tempfile, shutil
+        t_dir = Path(tempfile.gettempdir()) / 'vinetka_models'
+        t_dir.mkdir(parents=True, exist_ok=True)
+        target = t_dir / model_path.name
+        if not target.exists() or target.stat().st_size != model_path.stat().st_size:
+            shutil.copyfile(model_path, target)
+        return target
+
+YUNET_MODEL = get_safe_model_path(MODELS_DIR / "face_detection_yunet_2023mar.onnx")
+DET_FACE_MODEL = get_safe_model_path(MODELS_DIR / "det_face.onnx")
+GENDERAGE_MODEL = get_safe_model_path(MODELS_DIR / "genderage.onnx")
 
 # ==============================================================================
 # 1. БАЗА КАЗАХСКИХ И РАСПРОСТРАНЕННЫХ ИМЕН И ОКОНЧАНИЙ
@@ -322,10 +354,11 @@ class YuNetQualityAnalyzer:
         self._init_detector()
 
     def _init_detector(self):
-        if YUNET_MODEL.exists():
+        safe_path = get_safe_model_path(YUNET_MODEL)
+        if safe_path.exists():
             try:
                 self.detector = cv2.FaceDetectorYN.create(
-                    model=str(YUNET_MODEL),
+                    model=str(safe_path),
                     config="",
                     input_size=(320, 320),
                     score_threshold=self.score_thresh,
@@ -333,7 +366,8 @@ class YuNetQualityAnalyzer:
                     top_k=5000
                 )
             except Exception as e:
-                pass
+                import sys
+                print(f"[YuNet Warning] OpenCV failed to create FaceDetectorYN from {safe_path}: {e}", file=sys.stderr)
 
     def is_available(self) -> bool:
         return self.detector is not None
@@ -419,7 +453,8 @@ class YuNetQualityAnalyzer:
                 fh = min(new_h - fy, fh)
 
                 # Фильтр 1: минимальный физический размер лица
-                if fw < 24 or fh < 24:
+                min_sz = 14 if require_group else 22
+                if fw < min_sz or fh < min_sz:
                     continue
 
                 # Фильтр 2: Биологическая геометрия (глаза выше носа, нос выше рта)
@@ -810,7 +845,7 @@ def main():
         def worker_analyze(path):
             qa = get_thread_qa()
             # Быстрое сканирование: если лиц меньше 2, пропускаем тяжелые расчеты
-            res = qa.analyze_photo(str(path), max_dim=1024, require_group=True)
+            res = qa.analyze_photo(str(path), max_dim=1400, require_group=True)
             res["frame_num"] = get_frame_num(res.get("name", ""))
             return res
 

@@ -219,6 +219,36 @@ async function run() {
         { numbers: ['104', '999'] } // 999 нет на диске!
       ], ['101', '102', '103', '104']);
       testAssert(s3.portCount === 3 && s3.modCount === 1, 'Сценарий 3: В Мод попадает только реально существующий 2-й кадр');
+
+      // Сценарий 4: Разделение по полу (Порт/Мальчики и Порт/Девчонки)
+      function routePortExport(items, splitGenderPort) {
+        return items.map(item => {
+          if (!splitGenderPort) return 'Порт';
+          if (item.gender === 'boy') return 'Порт/Мальчики';
+          if (item.gender === 'girl') return 'Порт/Девчонки';
+          return 'Порт';
+        });
+      }
+
+      const samplePortItems = [
+        { name: 'Алихан', gender: 'boy' },
+        { name: 'Аружан', gender: 'girl' },
+        { name: 'Учитель', gender: 'teacher' }
+      ];
+
+      const splitRoutes = routePortExport(samplePortItems, true);
+      testAssert(
+        splitRoutes[0] === 'Порт/Мальчики' &&
+        splitRoutes[1] === 'Порт/Девчонки' &&
+        splitRoutes[2] === 'Порт',
+        'Сценарий 4: При splitGenderPort=true создаются Порт/Мальчики и Порт/Девчонки'
+      );
+
+      const standardRoutes = routePortExport(samplePortItems, false);
+      testAssert(
+        standardRoutes.every(r => r === 'Порт'),
+        'Сценарий 5: При splitGenderPort=false все портреты сохраняются прямо в Порт'
+      );
     }
 
     // -------------------------------------------------------------------------

@@ -276,6 +276,89 @@ body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111
 .aiQualityStat small{color:var(--muted);font-size:9px}
 .penaltiesBox{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:6px;padding:6px;font-size:10px;color:#e74c3c}
 
+.splitGenderBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 6px;
+  transition: all 0.2s ease;
+}
+.splitGenderBox:hover {
+  border-color: var(--orange);
+}
+.splitGenderBox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--orange);
+  cursor: pointer;
+}
+
+.tgBotCard {
+  margin-top: 14px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.tgQrBox {
+  background: #fff;
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tgQrBox img {
+  display: block;
+}
+.tgInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tgInfo b {
+  font-size: 13px;
+  color: var(--text);
+}
+.tgInfo p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.tgBtn {
+  align-self: flex-start;
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #229ed9;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.tgBtn:hover {
+  opacity: 0.9;
+}
+
 @media(max-width:1250px){
   .workspace{grid-template-columns:250px 1fr 310px}
   .top{grid-template-columns:230px 1fr 230px}
@@ -475,6 +558,10 @@ body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111
     </div>
     <button class="wide" id="clear" data-k="Белгіні алып тастау" data-r="Снять отметку">Белгіні алып тастау</button>
     <button class="wide" id="editCurrent" data-k="✎ ФИ өзгерту" data-r="✎ Изменить ФИ">✎ ФИ өзгерту</button>
+    <label class="splitGenderBox" id="lblSplitGender" title="Порт папкасының ішінде «Мальчики» және «Девчонки» бөлек папкалары жасалады">
+      <input type="checkbox" id="chkSplitGender">
+      <span id="txtSplitGender" data-k="Ұлдар мен қыздарды бөлек сақтау" data-r="Сохранить отдельно мальчики или девчонки">Сохранить отдельно мальчики или девчонки</span>
+    </label>
     <button class="wide primary" id="export" data-k="Порт / Мод / Коллаж папкаларына сақтау" data-r="Сохранить в папки Порт / Мод / Коллаж">Порт / Мод / Коллаж папкаларына сақтау</button>
     <div class="hintBox">Пернелер / Клавиши: [↑/↓] Таңдау, [1/2] Жыныс, [E] Өзгерту, [Space] Сақтау</div>
   </aside>
@@ -519,11 +606,23 @@ body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111
       <input type="text" id="newLicenseKey" placeholder="VK-XXXX-XXXX-XXXX-XXXX" autocomplete="off">
       <button id="btnActivateKey" data-k="Іске қосу" data-r="Активировать">Іске қосу</button>
     </div>
-    <div class="licMsg" id="setLicMsg"></div>
+    <div class="tgBotCard">
+      <div class="tgQrBox">
+        <img src="qr_telegram.svg" alt="QR" width="80" height="80">
+      </div>
+      <div class="tgInfo">
+        <b data-k="Telegram арқылы кілт алу" data-r="Купить ключ в Telegram">Купить ключ в Telegram</b>
+        <p data-k="QR-кодты камерамен сканерлеңіз немесе ботқа өтіңіз:" data-r="Отсканируйте QR-код или нажмите кнопку для перехода в бот:">Отсканируйте QR-код или нажмите кнопку для перехода в бот:</p>
+        <button type="button" class="tgBtn" id="btnOpenTgBot">
+          <svg style="width:16px;height:16px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+          <span>@vinetka_keys_kz_bot</span>
+        </button>
+      </div>
+    </div>
 
     <div style="margin-top:14px; border-top:1px solid var(--line); padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
       <button id="btnCheckUpdate" style="padding:8px 12px; background:var(--panel2); border:1px solid var(--line); border-radius:7px; color:var(--text); cursor:pointer; font-size:12px;" data-k="Жаңартуды тексеру" data-r="Проверить обновление">Жаңартуды тексеру</button>
-      <span style="font-size:11px; color:var(--muted);">Версия: 2.2.5</span>
+      <span style="font-size:11px; color:var(--muted);">Версия: 2.2.7</span>
     </div>
 
     <footer>
@@ -647,6 +746,24 @@ $('#btnCheckUpdate').onclick = () => {
   if (api && api.checkForUpdates) api.checkForUpdates();
 };
 
+const btnOpenTg = $('#btnOpenTgBot');
+if (btnOpenTg) {
+  btnOpenTg.onclick = () => {
+    if (api && api.openExternal) {
+      api.openExternal('https://t.me/vinetka_keys_kz_bot');
+    }
+  };
+}
+
+const chkSplit = $('#chkSplitGender');
+if (chkSplit) {
+  const savedSplit = localStorage.getItem('vk-split-gender');
+  if (savedSplit !== null) chkSplit.checked = savedSplit === 'true';
+  chkSplit.addEventListener('change', () => {
+    localStorage.setItem('vk-split-gender', chkSplit.checked);
+  });
+}
+
 if (api && api.getLicenseStatus) {
   api.getLicenseStatus().then(renderLicenseBadge);
 }
@@ -718,6 +835,12 @@ function applyLanguage() {
   $('#lang').textContent = lang === 'kk' ? 'RU' : 'ҚАЗ';
   $('#theme').textContent = theme === 'dark' ? '☀' : '☾';
   $('#pageTitle').textContent = lang === 'kk' ? 'Фото сұрыптау' : 'Сортировка фотографий';
+  const lblSplit = $('#lblSplitGender');
+  if (lblSplit) {
+    lblSplit.title = lang === 'kk'
+      ? '«Порт» ішінде «Мальчики» және «Девчонки» бөлек папкалары жасалады'
+      : 'Внутри «Порт» будут созданы отдельные папки «Мальчики» и «Девчонки»';
+  }
   localStorage.setItem('vk-lang', lang);
   localStorage.setItem('vk-theme', theme);
   if (currentLicInfo) renderLicenseBadge(currentLicInfo);
@@ -1726,7 +1849,7 @@ $('#export').onclick = async () => {
         const count = (usedNames.get(key) || 0) + 1;
         usedNames.set(key, count);
         const outputName = base + (count > 1 ? '_' + count : '') + '.' + ext;
-        readyFiles.push({ sourcePath: p1.sourcePath, outputName, folder: 'Порт' });
+        readyFiles.push({ sourcePath: p1.sourcePath, outputName, folder: 'Порт', gender: s.gender || 'unknown' });
       }
     }
 
@@ -1805,10 +1928,12 @@ $('#export').onclick = async () => {
   exportBtn.textContent = lang === 'kk' ? 'Сақталуда...' : 'Сохранение...';
 
   try {
+    const splitGenderPort = Boolean($('#chkSplitGender')?.checked);
     const res = await api.saveSorted({
       files: readyFiles,
       collages: collagePayload,
-      teacher: teacherPayload
+      teacher: teacherPayload,
+      splitGenderPort
     });
 
     const folderInfo = res.folders && res.folders.length ? ` · [${res.folders.join(', ')}]` : '';

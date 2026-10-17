@@ -313,10 +313,16 @@ function openLicenseWindow() {
     licenseWindow.focus();
     return;
   }
-  licenseWindow = new BrowserWindow({ width: 440, height: 430, resizable: false, maximizable: false, backgroundColor: '#090b0c', icon: path.join(__dirname, 'icon.png'), webPreferences: { nodeIntegration: true, contextIsolation: false } });
+  licenseWindow = new BrowserWindow({ width: 440, height: 620, resizable: false, maximizable: false, backgroundColor: '#090b0c', icon: path.join(__dirname, 'icon.png'), webPreferences: { nodeIntegration: true, contextIsolation: false } });
   licenseWindow.setMenuBarVisibility(false); 
   licenseWindow.loadFile(path.join(__dirname, 'license.html'));
 }
+
+ipcMain.handle('shell:open-external', async (_event, url) => {
+  if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
+    return shell.openExternal(url);
+  }
+});
 
 ipcMain.handle('license:get-status', () => {
   return currentLicenseStatus;
@@ -863,10 +869,14 @@ ipcMain.handle('photos:save-sorted', async (_event, payload) => {
   const files = Array.isArray(payload) ? payload : (payload?.files || []);
   const collages = Array.isArray(payload?.collages) ? payload.collages : [];
   const teacher = payload?.teacher || null;
+  const splitGenderPort = Boolean(payload?.splitGenderPort);
 
   const portDir = path.join(selectedRoot, 'Порт');
   const modDir = path.join(selectedRoot, 'Мод');
   const collageDir = path.join(selectedRoot, 'Коллаж');
+
+  const boysDir = path.join(portDir, 'Мальчики');
+  const girlsDir = path.join(portDir, 'Девчонки');
 
   const portItems = files.filter(f => f.folder === 'Порт');
   const modItems = files.filter(f => f.folder === 'Мод');
@@ -875,7 +885,8 @@ ipcMain.handle('photos:save-sorted', async (_event, payload) => {
     portItems.push({
       sourcePath: teacher.sourcePath,
       outputName: teacher.outputName || path.basename(teacher.sourcePath),
-      folder: 'Порт'
+      folder: 'Порт',
+      gender: 'teacher'
     });
   }
 
@@ -884,7 +895,13 @@ ipcMain.handle('photos:save-sorted', async (_event, payload) => {
   const createCollage = collages.length > 0;
 
   const mkdirTasks = [];
-  if (createPort) mkdirTasks.push(mkdir(portDir, { recursive: true }));
+  if (createPort) {
+    mkdirTasks.push(mkdir(portDir, { recursive: true }));
+    if (splitGenderPort) {
+      mkdirTasks.push(mkdir(boysDir, { recursive: true }));
+      mkdirTasks.push(mkdir(girlsDir, { recursive: true }));
+    }
+  }
   if (createMod) mkdirTasks.push(mkdir(modDir, { recursive: true }));
   if (createCollage) mkdirTasks.push(mkdir(collageDir, { recursive: true }));
   await Promise.all(mkdirTasks);
@@ -893,7 +910,27 @@ ipcMain.handle('photos:save-sorted', async (_event, payload) => {
   let count = 0;
 
   const queue = [];
-  if (createPort) portItems.forEach(item => queue.push({ ...item, targetDir: portDir, folderName: 'Порт' }));
+  if (createPort) {
+    portItems.forEach(item => {
+      let targetDir = portDir;
+      let folderName = 'Порт';
+
+      if (splitGenderPort) {
+        if (item.gender === 'boy') {
+          targetDir = boysDir;
+          folderName = 'Порт/Мальчики';
+        } else if (item.gender === 'girl') {
+          targetDir = girlsDir;
+          folderName = 'Порт/Девчонки';
+        } else {
+          targetDir = portDir;
+          folderName = 'Порт';
+        }
+      }
+
+      queue.push({ ...item, targetDir, folderName });
+    });
+  }
   if (createMod) modItems.forEach(item => queue.push({ ...item, targetDir: modDir, folderName: 'Мод' }));
   if (createCollage) collages.forEach(item => queue.push({ ...item, targetDir: collageDir, folderName: 'Коллаж' }));
 

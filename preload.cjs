@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('vinetkaDesktop', {
   saveSorted: (options) => ipcRenderer.invoke('photos:save-sorted', options),
   getLicenseStatus: () => ipcRenderer.invoke('license:get-status'),
   verifyLicense: (code) => ipcRenderer.invoke('license:verify', code),
+  openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
   getPathForFile: (file) => {
     try {
