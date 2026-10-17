@@ -1,6 +1,6 @@
 const { app, BrowserWindow, dialog, ipcMain, protocol, net, safeStorage, shell, clipboard } = require('electron');
 const { createHash } = require('node:crypto');
-const { copyFile, mkdir, readFile, readdir, writeFile, stat, unlink } = require('node:fs/promises');
+const { copyFile, mkdir, readFile, readdir, writeFile, stat, unlink, rm } = require('node:fs/promises');
 const { execFile, spawn } = require('node:child_process');
 const { promisify } = require('node:util');
 const path = require('node:path');
@@ -151,14 +151,15 @@ async function resolveAccess() {
   // МГНОВЕННЫЙ ЗАПУСК (<0.3 сек вместо 5-7 сек):
   // Если у пользователя уже активирован ключ и срок действия не истек,
   // открываем интерфейс МГНОВЕННО, а проверку на сервере делаем в фоне!
-  if (cached?.mode === 'licensed' && expires > Date.now()) {
+  if ((cached?.mode === 'licensed' || cached?.mode === 'trial') && expires > Date.now()) {
+    const isTrial = cached?.mode === 'trial';
     updateClientLicenseStatus({
-      mode: 'licensed',
-      customer: cached?.customer || '',
+      mode: cached?.mode,
+      customer: cached?.customer || (isTrial ? 'Сынақ нұсқасы / Пробная' : ''),
       licenseKey: cached?.licenseKey || '',
       expiresAt: cached?.expiresAt,
       daysLeft: daysLeft,
-      text: `Белсенді / Активен (${daysLeft} к/д)`
+      text: isTrial ? `Сынақ / Пробный (${daysLeft} к/д)` : `Белсенді / Активен (${daysLeft} к/д)`
     });
 
     // Фоновая тихая валидация с сервером
@@ -462,32 +463,42 @@ async function browseDirectory(targetPath) {
 
   try {
     const entries = await readdir(resolved, { withFileTypes: true });
+    const imageCandidates = [];
     for (const e of entries) {
       if (e.name.startsWith('.')) continue;
       const fullPath = path.join(resolved, e.name);
       if (e.isDirectory()) {
         folders.push({ name: e.name, path: fullPath });
       } else if (e.isFile() && IMAGE_RE.test(e.name)) {
+        imageCandidates.push({ name: e.name, path: fullPath });
+      }
+    }
+
+    const BATCH_SIZE = 32;
+    for (let i = 0; i < imageCandidates.length; i += BATCH_SIZE) {
+      const batch = imageCandidates.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(async (item) => {
         let isPlaceholder = false;
         let size = 0;
         let mtime = 0;
         try {
-          const st = await stat(fullPath);
+          const st = await stat(item.path);
           size = st.size;
           mtime = st.mtimeMs;
           if (st.size === 0) isPlaceholder = true;
         } catch {
           isPlaceholder = true;
         }
-        photos.push({
-          name: e.name,
-          path: fullPath,
+        return {
+          name: item.name,
+          path: item.path,
           size,
           mtime,
           isCloudPlaceholder: isPlaceholder,
-          url: `vinetka-photo://local/${Buffer.from(fullPath).toString('base64url')}`
-        });
-      }
+          url: `vinetka-photo://local/${Buffer.from(item.path).toString('base64url')}`
+        };
+      }));
+      photos.push(...batchResults);
     }
   } catch (err) {
     return { ok: false, error: err.message, currentPath: resolved, parentPath, folders: [], photos: [], photoCount: 0, folderCount: 0 };
@@ -988,7 +999,29 @@ ipcMain.handle('photos:save-sorted', async (_event, payload) => {
   return { count, outputDir: selectedRoot, folders: [...folders] };
 });
 
+async function cleanupStaleTempFolders() {
+  try {
+    const osTmp = require('node:os').tmpdir();
+    const entries = await readdir(osTmp, { withFileTypes: true });
+    const ONE_HOUR = 60 * 60 * 1000;
+    const now = Date.now();
+    for (const e of entries) {
+      if (e.isDirectory() && (e.name.startsWith('vinetka_wf_test_') || e.name.startsWith('vinetka_adaptive_test_') || e.name.startsWith('vinetka_test_'))) {
+        const full = path.join(osTmp, e.name);
+        try {
+          const st = await stat(full);
+          if (now - st.mtimeMs > ONE_HOUR) {
+            await rm(full, { recursive: true, force: true });
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+}
+
 app.whenReady().then(async () => {
+  cleanupStaleTempFolders();
+
   protocol.handle('vinetka-photo', (request) => { 
     try { 
       const filePath = Buffer.from(new URL(request.url).pathname.slice(1), 'base64url').toString('utf8'); 

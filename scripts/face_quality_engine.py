@@ -121,9 +121,12 @@ class HybridGenderClassifier:
     def __init__(self):
         self.det_sess = None
         self.ga_sess = None
-        self._init_models()
+        self._models_loaded = False
 
     def _init_models(self):
+        if self._models_loaded:
+            return
+        self._models_loaded = True
         try:
             if DET_FACE_MODEL.exists() and GENDERAGE_MODEL.exists():
                 opts = ort.SessionOptions()
@@ -153,6 +156,7 @@ class HybridGenderClassifier:
         return anchor_centers
 
     def detect_face_bbox(self, img_bgr: np.ndarray) -> Optional[np.ndarray]:
+        self._init_models()
         if self.det_sess is None or img_bgr is None or img_bgr.size == 0:
             return None
         im_ratio = float(img_bgr.shape[0]) / img_bgr.shape[1]
@@ -207,6 +211,7 @@ class HybridGenderClassifier:
         return all_bboxes[idx]
 
     def predict_face_gender(self, img_bgr: np.ndarray) -> Tuple[str, float]:
+        self._init_models()
         if self.ga_sess is None or img_bgr is None or img_bgr.size == 0:
             return "unknown", 0.0
 
