@@ -25,14 +25,23 @@ function legacyLicensePath() { return path.join(app.getPath('userData'), 'licens
 async function getDeviceId() {
   if (cachedDeviceId) return cachedDeviceId;
   try {
-    const { stdout } = await execFileAsync('reg.exe', ['query', 'HKLM\\SOFTWARE\\Microsoft\\Cryptography', '/v', 'MachineGuid'], { windowsHide: true });
-    const match = stdout.match(/MachineGuid\s+REG_SZ\s+([^\r\n]+)/i);
-    if (match) {
-      cachedDeviceId = createHash('sha256').update(match[1].trim()).digest('hex');
-      return cachedDeviceId;
+    if (process.platform === 'win32') {
+      const { stdout } = await execFileAsync('reg.exe', ['query', 'HKLM\\SOFTWARE\\Microsoft\\Cryptography', '/v', 'MachineGuid'], { windowsHide: true });
+      const match = stdout.match(/MachineGuid\s+REG_SZ\s+([^\r\n]+)/i);
+      if (match) {
+        cachedDeviceId = createHash('sha256').update(match[1].trim()).digest('hex');
+        return cachedDeviceId;
+      }
+    } else if (process.platform === 'darwin') {
+      const { stdout } = await execFileAsync('ioreg', ['-rd1', '-c', 'IOPlatformExpertDevice']);
+      const match = stdout.match(/"IOPlatformUUID"\s*=\s*"([^"]+)"/i);
+      if (match) {
+        cachedDeviceId = createHash('sha256').update(match[1].trim()).digest('hex');
+        return cachedDeviceId;
+      }
     }
   } catch {}
-  cachedDeviceId = createHash('sha256').update(`${process.env.COMPUTERNAME || ''}|${process.arch}`).digest('hex');
+  cachedDeviceId = createHash('sha256').update(`${process.env.COMPUTERNAME || process.env.USER || 'vinetka-device'}|${process.arch}`).digest('hex');
   return cachedDeviceId;
 }
 
@@ -130,11 +139,73 @@ function updateClientLicenseStatus(status) {
 async function resolveAccess() {
   const cached = await loadLicense();
   
-  // Если у пользователя вообще нет активированного ключа — НЕ СОЗДАВАТЬ ТРИАЛ, сразу требовать ключ!
+  // Если у пользователя вообще нет активированного ключа — СТРОГО требовать ключ!
   if (!cached || !cached.licenseKey) {
     return { ok: false, error: 'no_license' };
   }
 
+  const expires = new Date(cached?.expiresAt || 0).getTime();
+  const checked = Number(cached?.lastServerCheck || 0);
+  const daysLeft = calculateDaysLeft(cached?.expiresAt);
+
+  // МГНОВЕННЫЙ ЗАПУСК (<0.3 сек вместо 5-7 сек):
+  // Если у пользователя уже активирован ключ и срок действия не истек,
+  // открываем интерфейс МГНОВЕННО, а проверку на сервере делаем в фоне!
+  if (cached?.mode === 'licensed' && expires > Date.now()) {
+    updateClientLicenseStatus({
+      mode: 'licensed',
+      customer: cached?.customer || '',
+      licenseKey: cached?.licenseKey || '',
+      expiresAt: cached?.expiresAt,
+      daysLeft: daysLeft,
+      text: `Белсенді / Активен (${daysLeft} к/д)`
+    });
+
+    // Фоновая тихая валидация с сервером
+    checkLicense(cached.licenseKey).then(async (result) => {
+      if (!result.ok) {
+        await saveLicense({ licenseKey: cached.licenseKey, status: result.error || 'invalid' });
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const msg = result.error === 'blocked' 
+            ? 'Құрылғы әкімшімен бұғатталды / Компьютер заблокирован администратором'
+            : 'Лицензия мерзімі аяқталды немесе жарамсыз / Лицензия недействительна';
+          await dialog.showMessageBox(mainWindow, { 
+            type: 'warning', 
+            title: 'VINETKA', 
+            message: msg, 
+            detail: 'Жаңа лицензия кілтін белсендіріңіз / Пожалуйста, активируйте действительный лицензионный ключ' 
+          });
+          mainWindow.close(); 
+          openLicenseWindow();
+        }
+      } else {
+        const newDays = calculateDaysLeft(result.expiresAt);
+        const statusData = {
+          licenseKey: cached.licenseKey,
+          mode: 'licensed',
+          customer: result.customer || '',
+          expiresAt: result.expiresAt,
+          lastServerCheck: Date.now(),
+          daysLeft: newDays
+        };
+        await saveLicense(statusData);
+        updateClientLicenseStatus({
+          mode: 'licensed',
+          customer: result.customer || '',
+          licenseKey: cached.licenseKey,
+          expiresAt: result.expiresAt,
+          daysLeft: newDays,
+          text: `Белсенді / Активен (${newDays} к/д)`
+        });
+      }
+    }).catch(() => {
+      // Сеть временно недоступна — работаем по локальному кэшу
+    });
+
+    return { ok: true, mode: 'cached', expiresAt: cached?.expiresAt };
+  }
+
+  // Если локального валидного ключа нет или он истек — синхронно опрашиваем сервер
   try {
     const result = await checkLicense(cached.licenseKey);
     if (!result.ok) {
@@ -143,14 +214,14 @@ async function resolveAccess() {
       return result;
     }
 
-    const daysLeft = calculateDaysLeft(result.expiresAt);
+    const newDays = calculateDaysLeft(result.expiresAt);
     const statusData = {
       licenseKey: cached.licenseKey,
       mode: 'licensed',
       customer: result.customer || '',
       expiresAt: result.expiresAt,
       lastServerCheck: Date.now(),
-      daysLeft: daysLeft
+      daysLeft: newDays
     };
     await saveLicense(statusData);
     
@@ -159,17 +230,13 @@ async function resolveAccess() {
       customer: result.customer || '',
       licenseKey: cached.licenseKey,
       expiresAt: result.expiresAt,
-      daysLeft: daysLeft,
-      text: `Белсенді / Активен (${daysLeft} к/д)`
+      daysLeft: newDays,
+      text: `Белсенді / Активен (${newDays} к/д)`
     });
 
     return result;
   } catch (err) {
     // В случае сбоя сети — проверяем оффлайн грейс-период ТОЛЬКО ДЛЯ АКТИВИРОВАННЫХ ключей
-    const expires = new Date(cached?.expiresAt || 0).getTime();
-    const checked = Number(cached?.lastServerCheck || 0);
-    const daysLeft = calculateDaysLeft(cached?.expiresAt);
-
     if (cached?.mode === 'licensed' && expires > Date.now() && Date.now() - checked <= OFFLINE_GRACE_MS) {
       updateClientLicenseStatus({
         mode: 'licensed',
@@ -320,13 +387,27 @@ async function findAdjacentPhotoFolder(startDir) {
 
 async function getSystemDrives() {
   const drives = [];
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  for (const l of letters) {
-    const drivePath = `${l}:\\`;
+  if (process.platform === 'win32') {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    for (const l of letters) {
+      const drivePath = `${l}:\\`;
+      try {
+        await stat(drivePath);
+        drives.push({ name: `${l}:`, path: drivePath, type: 'drive' });
+      } catch {}
+    }
+  } else if (process.platform === 'darwin') {
+    drives.push({ name: 'Macintosh HD', path: '/', type: 'drive' });
     try {
-      await stat(drivePath);
-      drives.push({ name: `${l}:`, path: drivePath, type: 'drive' });
+      const vols = await readdir('/Volumes', { withFileTypes: true });
+      for (const v of vols) {
+        if (!v.name.startsWith('.')) {
+          drives.push({ name: v.name, path: path.join('/Volumes', v.name), type: 'drive' });
+        }
+      }
     } catch {}
+  } else {
+    drives.push({ name: 'Root (/)', path: '/', type: 'drive' });
   }
 
   const shortcuts = [];
@@ -347,25 +428,29 @@ async function getSystemDrives() {
     } catch {}
   }
 
-  const gDriveCandidate = 'G:\\';
+  const gDriveCandidate = process.platform === 'win32' ? 'G:\\' : path.join(app.getPath('home'), 'Google Drive');
   try {
     await stat(gDriveCandidate);
-    shortcuts.push({ name: 'Google Drive (G:)', path: gDriveCandidate, type: 'gdrive', icon: '☁️' });
+    shortcuts.push({ name: 'Google Drive', path: gDriveCandidate, type: 'gdrive', icon: '☁️' });
   } catch {}
 
   return { drives, shortcuts };
 }
 
 async function browseDirectory(targetPath) {
-  let resolved = targetPath ? path.resolve(targetPath) : app.getPath('pictures');
+  let resolved = targetPath ? path.resolve(targetPath) : (process.platform === 'win32' ? app.getPath('pictures') : app.getPath('home'));
   try {
     const s = await stat(resolved);
     if (!s.isDirectory()) resolved = path.dirname(resolved);
   } catch {
-    resolved = 'C:\\';
+    resolved = process.platform === 'win32' ? 'C:\\' : app.getPath('home');
   }
 
-  const parentPath = path.dirname(resolved) !== resolved ? path.dirname(resolved) : null;
+  const isWinRoot = process.platform === 'win32' && /^[A-Z]:\\?$/i.test(resolved);
+  const isPosixRoot = resolved === '/';
+  const parentPath = (!isWinRoot && !isPosixRoot && path.dirname(resolved) !== resolved) 
+    ? path.dirname(resolved) 
+    : null;
   const folders = [];
   const photos = [];
 
@@ -575,25 +660,47 @@ ipcMain.handle('photos:load-folder', async (_event, folderPath) => {
 });
 
 function getPythonCommand() {
-  if (process.env.PYTHON_BIN && require('fs').existsSync(process.env.PYTHON_BIN)) {
-    return process.env.PYTHON_BIN;
-  }
-  const localAppData = process.env.LOCALAPPDATA || '';
-  const candidates = [
-    path.join(localAppData, 'Programs', 'Python', 'Python312', 'python.exe'),
-    path.join(localAppData, 'Programs', 'Python', 'Python311', 'python.exe'),
-    path.join(localAppData, 'Programs', 'Python', 'Python310', 'python.exe'),
-    'C:\\Python312\\python.exe',
-    'C:\\Python311\\python.exe',
-    'python'
-  ];
-  for (const c of candidates) {
-    if (c === 'python') return c;
+  if (process.env.PYTHON_BIN) {
     try {
-      if (require('fs').existsSync(c)) return c;
+      if (require('fs').existsSync(process.env.PYTHON_BIN)) return process.env.PYTHON_BIN;
     } catch {}
   }
-  return 'python';
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA || '';
+    const candidates = [
+      path.join(localAppData, 'Programs', 'Python', 'Python312', 'python.exe'),
+      path.join(localAppData, 'Programs', 'Python', 'Python311', 'python.exe'),
+      path.join(localAppData, 'Programs', 'Python', 'Python310', 'python.exe'),
+      'C:\\Python312\\python.exe',
+      'C:\\Python311\\python.exe',
+      'python'
+    ];
+    for (const c of candidates) {
+      if (c === 'python') return c;
+      try {
+        if (require('fs').existsSync(c)) return c;
+      } catch {}
+    }
+    return 'python';
+  } else if (process.platform === 'darwin') {
+    const candidates = [
+      '/opt/homebrew/bin/python3',
+      '/usr/local/bin/python3',
+      '/Library/Frameworks/Python.framework/Versions/3.12/bin/python3',
+      '/Library/Frameworks/Python.framework/Versions/3.11/bin/python3',
+      '/usr/bin/python3',
+      'python3',
+      'python'
+    ];
+    for (const c of candidates) {
+      if (!c.startsWith('/')) return c;
+      try {
+        if (require('fs').existsSync(c)) return c;
+      } catch {}
+    }
+    return 'python3';
+  }
+  return 'python3';
 }
 
 function getPythonEnv() {
