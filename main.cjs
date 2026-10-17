@@ -574,6 +574,35 @@ ipcMain.handle('photos:load-folder', async (_event, folderPath) => {
   return scanFolderPhotos(folderPath);
 });
 
+function getPythonCommand() {
+  if (process.env.PYTHON_BIN && require('fs').existsSync(process.env.PYTHON_BIN)) {
+    return process.env.PYTHON_BIN;
+  }
+  const localAppData = process.env.LOCALAPPDATA || '';
+  const candidates = [
+    'python',
+    path.join(localAppData, 'Programs', 'Python', 'Python312', 'python.exe'),
+    path.join(localAppData, 'Programs', 'Python', 'Python311', 'python.exe'),
+    path.join(localAppData, 'Programs', 'Python', 'Python310', 'python.exe'),
+    'C:\\Python312\\python.exe',
+    'C:\\Python311\\python.exe'
+  ];
+  for (const c of candidates) {
+    if (c === 'python') return c;
+    try {
+      if (require('fs').existsSync(c)) return c;
+    } catch {}
+  }
+  return 'python';
+}
+
+function getPythonEnv() {
+  return Object.assign({}, process.env, {
+    PYTHONUTF8: '1',
+    PYTHONIOENCODING: 'utf-8'
+  });
+}
+
 function getScriptPath(scriptName) {
   const normalPath = path.join(__dirname, 'scripts', scriptName);
   const unpackedPath = normalPath.replace('app.asar', 'app.asar.unpacked');
@@ -592,7 +621,11 @@ ipcMain.handle('ai:classify-genders', async (_event, students) => {
   
   try {
     await writeFile(tempJson, JSON.stringify(students, null, 2), 'utf8');
-    const { stdout } = await execFileAsync('python', [scriptPath, '--mode', 'gender', '--input-json', tempJson], { windowsHide: true, maxBuffer: 10 * 1024 * 1024 });
+    const { stdout } = await execFileAsync(getPythonCommand(), [scriptPath, '--mode', 'gender', '--input-json', tempJson], {
+      windowsHide: true,
+      maxBuffer: 10 * 1024 * 1024,
+      env: getPythonEnv()
+    });
     const parsed = JSON.parse(stdout);
     return parsed;
   } catch (err) {
@@ -615,7 +648,11 @@ ipcMain.handle('ai:face-quality-debug', async (_event, photoPath) => {
   if (!photoPath) return { ok: false, error: 'no_photo' };
   const scriptPath = getScriptPath('face_quality_engine.py');
   try {
-    const { stdout } = await execFileAsync('python', [scriptPath, '--mode', 'debug-image', '--photo', photoPath], { windowsHide: true, maxBuffer: 20 * 1024 * 1024 });
+    const { stdout } = await execFileAsync(getPythonCommand(), [scriptPath, '--mode', 'debug-image', '--photo', photoPath], {
+      windowsHide: true,
+      maxBuffer: 20 * 1024 * 1024,
+      env: getPythonEnv()
+    });
     const parsed = JSON.parse(stdout);
     return parsed;
   } catch (err) {
@@ -630,6 +667,8 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
 
   const excludeFrames = Array.isArray(payload?.excludeFrames) ? payload.excludeFrames.join(',') : '';
   const scriptPath = getScriptPath('face_quality_engine.py');
+  const { StringDecoder } = require('node:string_decoder');
+  const decoder = new StringDecoder('utf8');
 
   return new Promise((resolve) => {
     const args = [scriptPath, '--mode', 'bursts', '--shoot-dir', shootDir];
@@ -639,10 +678,14 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
 
     let outputJson = '';
     let stdoutBuffer = '';
-    const proc = spawn('python', args, { windowsHide: true });
+    let stderrBuffer = '';
+    const proc = spawn(getPythonCommand(), args, {
+      windowsHide: true,
+      env: getPythonEnv()
+    });
 
     proc.stdout.on('data', (chunk) => {
-      stdoutBuffer += chunk.toString('utf8');
+      stdoutBuffer += decoder.write(chunk);
       let nlIndex;
       while ((nlIndex = stdoutBuffer.indexOf('\n')) !== -1) {
         const line = stdoutBuffer.slice(0, nlIndex).trim();
@@ -662,10 +705,12 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
     });
 
     proc.stderr.on('data', (errChunk) => {
-      console.warn('AI Sorter stderr:', errChunk.toString());
+      stderrBuffer += errChunk.toString('utf8');
+      console.warn('AI Sorter stderr:', errChunk.toString('utf8'));
     });
 
     proc.on('close', async (code) => {
+      stdoutBuffer += decoder.end();
       if (stdoutBuffer.trim()) {
         const line = stdoutBuffer.trim();
         try {
@@ -676,10 +721,15 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
       if (code === 0 && outputJson) {
         try {
           const result = JSON.parse(outputJson);
-          return resolve(result);
+          if (result && result.ok) {
+            return resolve(result);
+          }
+          console.warn('AI Sorter Python returned non-ok result:', result);
         } catch (e) {
           console.error('Failed to parse AI output JSON:', e);
         }
+      } else {
+        console.warn(`AI Sorter Python exited with code ${code}. Stderr: ${stderrBuffer.slice(0, 300)}`);
       }
       const fallbackResult = await runJsFallbackCollageAnalyzer(shootDir, payload?.excludeFrames || []);
       resolve(fallbackResult);

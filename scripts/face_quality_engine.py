@@ -27,9 +27,9 @@ import onnxruntime as ort
 
 # Настройка UTF-8 для stdout/stderr на Windows
 if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stdout.reconfigure(encoding='utf-8')
 if hasattr(sys.stderr, 'reconfigure'):
-    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8')
 
 # Базовые пути
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -425,6 +425,11 @@ class YuNetQualityAnalyzer:
                 if touches_border and conf < 0.70:
                     continue
 
+                # Фильтр 5: Артефакты одежды/коленей в вертикальных одиночных портретах
+                # В вертикальном кадре лицо человека не может находиться в нижней части (> 58% высоты) с низкой уверенностью
+                if is_vert and (fy + fh / 2) > (new_h * 0.58) and conf < 0.65:
+                    continue
+
                 face_roi_gray = gray[fy:fy+fh, fx:fx+fw]
                 face_sharpness = float(cv2.Laplacian(face_roi_gray, cv2.CV_64F).var()) if face_roi_gray.size > 0 else 0.0
 
@@ -752,7 +757,8 @@ def main():
 
     # РЕЖИМ 4: ОТБОР ГРУППОВЫХ СЕРИЙ (BURSTS) НА БАЗЕ YUNET
     if args.mode == "bursts":
-        shoot_dir = Path(args.shoot_dir) if args.shoot_dir else None
+        shoot_dir_raw = (args.shoot_dir or "").strip('\"\'')
+        shoot_dir = Path(shoot_dir_raw) if shoot_dir_raw else None
         if not shoot_dir or not shoot_dir.exists():
             print(json.dumps({"ok": False, "error": f"Invalid shoot dir: {args.shoot_dir}"}))
             return

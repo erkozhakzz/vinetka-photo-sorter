@@ -1676,7 +1676,8 @@ $('#btnRunAi').onclick = async () => {
     } else {
       collages = [];
       renderCollages();
-      notify(lang === 'kk' ? 'Топтық фотолар табылмады' : 'Групповые серии не найдены');
+      const errMsg = res?.error ? (lang === 'kk' ? 'AI қатесі: ' + res.error : 'Ошибка ИИ: ' + res.error) : (lang === 'kk' ? 'Топтық фотолар табылмады' : 'Групповые серии не найдены');
+      notify(errMsg);
     }
   } catch (err) {
     notify('AI қатесі / Ошибка ИИ: ' + err.message);
