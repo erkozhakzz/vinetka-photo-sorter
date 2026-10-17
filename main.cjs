@@ -580,12 +580,12 @@ function getPythonCommand() {
   }
   const localAppData = process.env.LOCALAPPDATA || '';
   const candidates = [
-    'python',
     path.join(localAppData, 'Programs', 'Python', 'Python312', 'python.exe'),
     path.join(localAppData, 'Programs', 'Python', 'Python311', 'python.exe'),
     path.join(localAppData, 'Programs', 'Python', 'Python310', 'python.exe'),
     'C:\\Python312\\python.exe',
-    'C:\\Python311\\python.exe'
+    'C:\\Python311\\python.exe',
+    'python'
   ];
   for (const c of candidates) {
     if (c === 'python') return c;
@@ -684,6 +684,11 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
       env: getPythonEnv()
     });
 
+    const killTimer = setTimeout(() => {
+      console.warn('AI Sorter Python process exceeded 90s timeout, terminating.');
+      try { proc.kill(); } catch {}
+    }, 90000);
+
     proc.stdout.on('data', (chunk) => {
       stdoutBuffer += decoder.write(chunk);
       let nlIndex;
@@ -710,6 +715,7 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
     });
 
     proc.on('close', async (code) => {
+      clearTimeout(killTimer);
       stdoutBuffer += decoder.end();
       if (stdoutBuffer.trim()) {
         const line = stdoutBuffer.trim();
@@ -736,6 +742,7 @@ ipcMain.handle('ai:analyze-collages', async (_event, payload) => {
     });
 
     proc.on('error', async (err) => {
+      clearTimeout(killTimer);
       console.warn('Python spawn error, using JS fallback:', err);
       const fallbackResult = await runJsFallbackCollageAnalyzer(shootDir, payload?.excludeFrames || []);
       resolve(fallbackResult);

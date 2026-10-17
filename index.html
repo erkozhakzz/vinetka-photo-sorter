@@ -1451,9 +1451,10 @@ function updateAiProgress(data) {
   pct.textContent = percent + '%';
 
   if (data.stage === 'faces' || data.current !== undefined) {
+    const fileHint = data.file ? ` (${data.file})` : '';
     status.textContent = lang === 'kk'
-      ? `Жүздер мен анықтықты талдау: ${data.current || 0} / ${data.total || 0}`
-      : `Анализ лиц и резкости: ${data.current || 0} / ${data.total || 0}`;
+      ? `Жүздер мен анықтықты талдау: ${data.current || 0} / ${data.total || 0}${fileHint}`
+      : `Анализ лиц и резкости: ${data.current || 0} / ${data.total || 0}${fileHint}`;
   } else if (data.stage === 'clustering') {
     status.textContent = lang === 'kk' ? 'Серияларға топтастыру...' : 'Группировка по сериям...';
   }
@@ -1654,6 +1655,16 @@ $('#btnRunAi').onclick = async () => {
   btn.disabled = true;
   btn.innerHTML = `<span>⏳</span><span>${lang === 'kk' ? 'Талдау жүруде...' : 'Анализ...'}</span>`;
 
+  // Immediate UI feedback so the user knows AI has started
+  const pBox = $('#aiProgressBox');
+  const pFill = $('#aiProgressFill');
+  const pStatus = $('#aiProgressStatus');
+  const pPct = $('#aiProgressPercent');
+  pBox.classList.add('show');
+  pFill.style.width = '3%';
+  pPct.textContent = '0%';
+  pStatus.textContent = lang === 'kk' ? 'AI детекторы қосылуда...' : 'Запуск AI детектора...';
+
   // Exclude all matched portrait and teacher frames
   const excludeFrames = [];
   students.forEach(s => excludeFrames.push(...s.numbers));
@@ -1686,6 +1697,7 @@ $('#btnRunAi').onclick = async () => {
     btn.disabled = false;
     const btnLabel = lang === 'kk' ? (btn.dataset.k || 'Топтық фотоларды AI талдау') : (btn.dataset.r || 'ИИ анализ групповых фото');
     btn.innerHTML = `<span>✨</span><span>${btnLabel}</span>`;
+    setTimeout(() => $('#aiProgressBox').classList.remove('show'), 2000);
   }
 };
 

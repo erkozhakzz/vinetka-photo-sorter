@@ -16,13 +16,14 @@ import base64
 import argparse
 from pathlib import Path
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 from typing import Dict, Any, List, Optional, Tuple
 
 from PIL import Image, ImageOps
 import numpy as np
 import cv2
+cv2.setNumThreads(1)
 import onnxruntime as ort
 
 # Настройка UTF-8 для stdout/stderr на Windows
@@ -348,17 +349,30 @@ class YuNetQualityAnalyzer:
                 t_str = exif.get(36867) or exif.get(306)
                 dt = datetime.strptime(t_str, "%Y:%m:%d %H:%M:%S") if t_str else None
 
+                orig_w, orig_h = im.size
+                if p.suffix.lower() in ('.jpg', '.jpeg'):
+                    try:
+                        im.draft('RGB', (max_dim, max_dim))
+                    except Exception:
+                        pass
+
                 t = ImageOps.exif_transpose(im)
-                orig_w, orig_h = t.size
-                is_vert = orig_h > orig_w
+                draft_w, draft_h = t.size
+                is_vert = draft_h > draft_w
+
+                if is_vert != (orig_h > orig_w):
+                    orig_w, orig_h = orig_h, orig_w
 
                 # Масштабируем для оптимальной скорости и точности
-                scale = min(1.0, max_dim / max(orig_w, orig_h))
-                new_w = int(orig_w * scale)
-                new_h = int(orig_h * scale)
+                scale = min(1.0, max_dim / max(draft_w, draft_h))
+                new_w = max(32, int(draft_w * scale))
+                new_h = max(32, int(draft_h * scale))
 
                 resized = t.resize((new_w, new_h), Image.Resampling.BILINEAR)
                 img_bgr = cv2.cvtColor(np.array(resized), cv2.COLOR_RGB2BGR)
+
+            scale_x = orig_w / new_w if new_w > 0 else 1.0
+            scale_y = orig_h / new_h if new_h > 0 else 1.0
 
             faces_list = []
             if self.detector is not None:
@@ -496,13 +510,13 @@ class YuNetQualityAnalyzer:
 
                 # Переводим координаты обратно в исходное разрешение
                 faces_list.append({
-                    "bbox": [int(fx / scale), int(fy / scale), int(fw / scale), int(fh / scale)],
+                    "bbox": [int(fx * scale_x), int(fy * scale_y), int(fw * scale_x), int(fh * scale_y)],
                     "landmarks": [
-                        [int(re_x / scale), int(re_y / scale)],
-                        [int(le_x / scale), int(le_y / scale)],
-                        [int(nt_x / scale), int(nt_y / scale)],
-                        [int(rm_x / scale), int(rm_y / scale)],
-                        [int(lm_x / scale), int(lm_y / scale)]
+                        [int(re_x * scale_x), int(re_y * scale_y)],
+                        [int(le_x * scale_x), int(le_y * scale_y)],
+                        [int(nt_x * scale_x), int(nt_y * scale_y)],
+                        [int(rm_x * scale_x), int(rm_y * scale_y)],
+                        [int(lm_x * scale_x), int(lm_y * scale_y)]
                     ],
                     "confidence": round(conf, 2),
                     "eyes_open": both_eyes_open,
@@ -803,15 +817,23 @@ def main():
         frames_data = []
         processed = 0
 
-        with ThreadPoolExecutor(max_workers=4) as pool:
+        with ThreadPoolExecutor(max_workers=6) as pool:
             futures = [pool.submit(worker_analyze, p) for p in candidates]
-            for f in futures:
+            interval = 1 if total <= 30 else (2 if total <= 150 else 3)
+            for f in as_completed(futures):
                 res = f.result()
                 frames_data.append(res)
                 processed += 1
-                if processed % 10 == 0 or processed == total:
+                if processed % interval == 0 or processed == total:
                     pct = int((processed / total) * 100)
-                    print(json.dumps({"type": "progress", "current": processed, "total": total, "percent": pct, "stage": "faces"}), flush=True)
+                    print(json.dumps({
+                        "type": "progress",
+                        "current": processed,
+                        "total": total,
+                        "percent": pct,
+                        "file": res.get("name", ""),
+                        "stage": "faces"
+                    }), flush=True)
 
         frames_data.sort(key=lambda x: x["frame_num"])
         print(json.dumps({"type": "progress", "percent": 100, "stage": "done"}), flush=True)

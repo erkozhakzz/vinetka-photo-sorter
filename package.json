@@ -1,6 +1,6 @@
 {
   "name": "vinetka-photo-sorter-desktop",
-  "version": "2.2.6",
+  "version": "2.2.7",
   "description": "VINETKA.KZ photo sorter for Windows",
   "main": "main.cjs",
   "private": true,
