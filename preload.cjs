@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer, webUtils } = require('electron');
 contextBridge.exposeInMainWorld('vinetkaDesktop', {
   selectListFile: () => ipcRenderer.invoke('list:select-file'),
   parseDroppedFile: (filePath) => ipcRenderer.invoke('list:parse-dropped', filePath),
+  parseListText: (text) => ipcRenderer.invoke('list:parse-text', text),
+  readClipboardText: () => ipcRenderer.invoke('clipboard:read-text'),
   selectPhotoFolder: (defaultPath) => ipcRenderer.invoke('photos:select-folder', defaultPath),
   loadPhotoFolder: (folderPath) => ipcRenderer.invoke('photos:load-folder', folderPath),
   getDrives: () => ipcRenderer.invoke('photos:get-drives'),

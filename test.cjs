@@ -149,6 +149,19 @@ async function run() {
         const realGirls = parsedReal.students.filter(s => s.gender === 'girl');
         testAssert(realBoys.length + realGirls.length === parsedReal.students.length, `Мгновенное определение пола при чтении списка (мальчиков: ${realBoys.length}, девочек: ${realGirls.length})`);
       }
+
+      // 2.5 Прямая вставка текста из буфера обмена (WhatsApp / Telegram / Ручной ввод без файла)
+      const clipboardSample = `
+1. Ескендір Жәннәт — 7113, 7114
+2. Әлихан Нұрланұлы 7115
+3. Бөгенбай Кәусар 7116 7117
+Сынып жетекшісі: Ахметжанова Мақпал 7258
+      `.trim();
+      const rawLines = clipboardSample.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const parsedClipboard = parseTextLines(rawLines);
+      testAssert(parsedClipboard.students.length === 3, 'Прямая вставка текста: ровно 3 ученика без создания файла');
+      testAssert(parsedClipboard.students[0].numbers.length === 2 && parsedClipboard.students[0].numbers[0] === '7113', 'Прямая вставка текста: 2 кадра (7113, 7114)');
+      testAssert(parsedClipboard.teacher && parsedClipboard.teacher.surname === 'Ахметжанова' && parsedClipboard.teacher.numbers[0] === '7258', 'Прямая вставка текста: учитель распознан из текста');
     }
 
     // -------------------------------------------------------------------------

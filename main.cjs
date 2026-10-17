@@ -1,11 +1,11 @@
-const { app, BrowserWindow, dialog, ipcMain, protocol, net, safeStorage, shell } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, protocol, net, safeStorage, shell, clipboard } = require('electron');
 const { createHash } = require('node:crypto');
 const { copyFile, mkdir, readFile, readdir, writeFile, stat, unlink } = require('node:fs/promises');
 const { execFile, spawn } = require('node:child_process');
 const { promisify } = require('node:util');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { parseDocumentFile } = require('./parser.cjs');
+const { parseDocumentFile, parseTextLines } = require('./parser.cjs');
 
 const LICENSE_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxoUTjVR0cwj-aHCtFTpYl2TXOgpHwbP8Fet4RJz7-cQpcH_s6hbaxWwDAZ-Echq7wY/exec';
 const IMAGE_RE = /\.(jpe?g|png|webp|heic|cr2|cr3|nef|arw|dng)$/i;
@@ -611,6 +611,35 @@ ipcMain.handle('list:parse-dropped', async (_event, filePath) => {
     return { canceled: false, ...parsed, suggestedPhotoFolder };
   } catch (err) {
     return { canceled: true, error: err.message };
+  }
+});
+
+ipcMain.handle('list:parse-text', async (_event, rawText) => {
+  if (!rawText || typeof rawText !== 'string' || !rawText.trim()) {
+    return { canceled: true, error: 'empty_text' };
+  }
+  try {
+    const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const parsed = parseTextLines(lines);
+    parsed.fileName = 'Қойылған мәтін / Вставленный текст';
+    parsed.filePath = '';
+    parsed.format = 'TEXT';
+    parsed.directory = selectedRoot || '';
+    let suggestedPhotoFolder = null;
+    if (selectedRoot) {
+      suggestedPhotoFolder = await findAdjacentPhotoFolder(selectedRoot);
+    }
+    return { canceled: false, ...parsed, suggestedPhotoFolder };
+  } catch (err) {
+    return { canceled: true, error: err.message };
+  }
+});
+
+ipcMain.handle('clipboard:read-text', async () => {
+  try {
+    return clipboard.readText() || '';
+  } catch {
+    return '';
   }
 });
 

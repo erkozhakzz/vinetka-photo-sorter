@@ -359,6 +359,87 @@ body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111
   opacity: 0.9;
 }
 
+.pasteQuickActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.btnPasteAction {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btnPasteAction:hover {
+  border-color: var(--orange);
+  background: rgba(255,106,0,0.08);
+}
+.btnPasteAction.primary {
+  background: rgba(255,106,0,0.12);
+  border-color: rgba(255,106,0,0.4);
+  color: var(--orange);
+}
+.btnPasteAction.primary:hover {
+  background: var(--orange);
+  color: #fff;
+}
+.pasteBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.btnSmallAction {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btnSmallAction:hover {
+  border-color: var(--orange);
+}
+.pasteCounter {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+#pasteTextarea {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 190px;
+  outline: none;
+  box-sizing: border-box;
+}
+#pasteTextarea:focus {
+  border-color: var(--orange);
+}
+
 @media(max-width:1250px){
   .workspace{grid-template-columns:250px 1fr 310px}
   .top{grid-template-columns:230px 1fr 230px}
@@ -393,7 +474,17 @@ body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111
         <strong data-k="Тізімді таңдау" data-r="Выбрать список">Тізімді таңдау</strong>
         <small data-k="немесе файлды осында тастаңыз (Drag & Drop)" data-r="или перетащите файл сюда (Drag & Drop)">немесе файлды осында тастаңыз (Drag & Drop)</small>
       </button>
-      <div class="types"><span>Word</span><span>Excel</span><span>CSV</span><span>TXT</span></div>
+      <div class="pasteQuickActions">
+        <button type="button" class="btnPasteAction primary" id="btnPasteClipboard" title="Буферден көшірілген тізімді бірден қою (Ctrl+V) / Вставить список из буфера обмена (Ctrl+V)">
+          <span>📋</span>
+          <span data-k="Мәтінді қою (Ctrl+V)" data-r="Вставить текст (Ctrl+V)">Вставить текст (Ctrl+V)</span>
+        </button>
+        <button type="button" class="btnPasteAction" id="btnOpenPasteModal" title="Мәтінді терезеге қолмен енгізу / Ввести список вручную">
+          <span>✎</span>
+          <span data-k="Қолмен жазу" data-r="Ввести вручную">Ввести вручную</span>
+        </button>
+      </div>
+      <div class="types"><span>Word</span><span>Excel</span><span>CSV</span><span>TXT</span><span>Буфер / Текст</span></div>
       <div class="fileline" id="listFile" title="—">—</div>
     </section>
 
@@ -631,6 +722,36 @@ body.light{--bg:#f2f3f3;--panel:#fff;--panel2:#f4f5f5;--line:#d9dddf;--text:#111
   </div>
 </div>
 
+<!-- Direct Text / Clipboard Input Modal -->
+<div class="modalBg" id="pasteModal">
+  <div class="modal" style="width: 580px; max-width: 95vw;">
+    <h2 id="pasteModalTitle" data-k="Мәтінді қою" data-r="Вставить текст списка">Мәтінді қою</h2>
+    <p style="margin:0 0 10px; font-size:12px; color:var(--muted); line-height:1.4;" data-k="WhatsApp, Telegram немесе құжаттан көшірілген тізімді осында қойыңыз (Ctrl+V):" data-r="Вставьте сюда скопированный список из WhatsApp, Telegram или любого документа (Ctrl+V):">
+      WhatsApp, Telegram немесе құжаттан көшірілген тізімді осында қойыңыз (Ctrl+V):
+    </p>
+
+    <div class="pasteBar">
+      <button type="button" class="btnSmallAction" id="btnModalPasteClipboard">
+        <span>📋</span><span data-k="Буферден қою" data-r="Вставить из буфера">Вставить из буфера</span>
+      </button>
+      <button type="button" class="btnSmallAction" id="btnModalClear">
+        <span>🗑</span><span data-k="Тазарту" data-r="Очистить">Очистить</span>
+      </button>
+      <span class="pasteCounter" id="pasteLiveCounter">0 жол / 0 строк</span>
+    </div>
+
+    <textarea id="pasteTextarea" rows="11" placeholder="1. Ескендір Жәннәт — 7113, 7114
+2. Әлихан Нұрланұлы 7115
+3. Бөгенбай Кәусар 7116
+Сынып жетекшісі: Ахметжанова Мақпал 7258"></textarea>
+
+    <footer>
+      <button type="button" id="cancelPasteModal" data-k="Болдырмау" data-r="Отмена">Болдырмау</button>
+      <button type="button" class="save" id="btnApplyPasteText" data-k="✓ Тізімді қабылдау" data-r="✓ Применить список">✓ Тізімді қабылдау</button>
+    </footer>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -840,6 +961,12 @@ function applyLanguage() {
     lblSplit.title = lang === 'kk'
       ? '«Порт» ішінде «Мальчики» және «Девчонки» бөлек папкалары жасалады'
       : 'Внутри «Порт» будут созданы отдельные папки «Мальчики» и «Девчонки»';
+  }
+  const pasteTa = $('#pasteTextarea');
+  if (pasteTa) {
+    pasteTa.placeholder = lang === 'kk'
+      ? '1. Ескендір Жәннәт — 7113, 7114\n2. Әлихан Нұрланұлы 7115\nСынып жетекшісі: Ахметжанова Мақпал 7258'
+      : '1. Ескендір Жәннәт — 7113, 7114\n2. Алихан Нурланулы 7115\nКлассный руководитель: Ахметжанова Макпал 7258';
   }
   localStorage.setItem('vk-lang', lang);
   localStorage.setItem('vk-theme', theme);
@@ -1424,6 +1551,111 @@ $('#loadList').onclick = async () => {
   }
 };
 
+// Direct Text / Clipboard List Input
+function openPasteModal(initialText = '') {
+  const modal = $('#pasteModal');
+  const textarea = $('#pasteTextarea');
+  if (typeof initialText === 'string' && initialText.trim()) {
+    textarea.value = initialText;
+  }
+  updatePasteCounter();
+  modal.classList.add('show');
+  setTimeout(() => textarea.focus(), 50);
+}
+
+function closePasteModal() {
+  $('#pasteModal').classList.remove('show');
+}
+
+function updatePasteCounter() {
+  const val = $('#pasteTextarea').value || '';
+  const lines = val.split('\n').filter(l => l.trim().length > 0);
+  const isKk = lang === 'kk';
+  $('#pasteLiveCounter').textContent = isKk
+    ? `${lines.length} жол`
+    : `${lines.length} строк(и)`;
+}
+
+$('#pasteTextarea').oninput = updatePasteCounter;
+
+$('#btnOpenPasteModal').onclick = () => openPasteModal();
+$('#cancelPasteModal').onclick = closePasteModal;
+const closePasteBtn = $('#closePasteModal');
+if (closePasteBtn) closePasteBtn.onclick = closePasteModal;
+
+$('#btnModalClear').onclick = () => {
+  $('#pasteTextarea').value = '';
+  updatePasteCounter();
+  $('#pasteTextarea').focus();
+};
+
+$('#btnModalPasteClipboard').onclick = async () => {
+  let text = '';
+  if (api && api.readClipboardText) {
+    text = await api.readClipboardText();
+  }
+  if (!text && navigator.clipboard && navigator.clipboard.readText) {
+    try { text = await navigator.clipboard.readText(); } catch {}
+  }
+  if (text) {
+    $('#pasteTextarea').value = text;
+    updatePasteCounter();
+  } else {
+    notify(lang === 'kk' ? 'Буфер бос немесе мәтін жоқ' : 'Буфер обмена пуст');
+  }
+};
+
+async function handlePasteText(rawText) {
+  const cleanText = String(rawText || '').trim();
+  if (!cleanText) {
+    notify(lang === 'kk' ? 'Мәтін бос, тізім табылмады' : 'Вставьте текст со списком');
+    return;
+  }
+  try {
+    const res = await api.parseListText(cleanText);
+    if (!res || res.canceled || !res.students || !res.students.length) {
+      notify(lang === 'kk' ? 'Мәтіннен оқушылар табылмады' : 'В тексте не найдено учеников. Проверьте формат.');
+      return;
+    }
+    handleListResult(res);
+    closePasteModal();
+  } catch (err) {
+    notify('Қате / Ошибка: ' + err.message);
+  }
+}
+
+$('#btnApplyPasteText').onclick = async () => {
+  const text = $('#pasteTextarea').value;
+  await handlePasteText(text);
+};
+
+$('#btnPasteClipboard').onclick = async () => {
+  let text = '';
+  if (api && api.readClipboardText) {
+    text = await api.readClipboardText();
+  }
+  if (!text && navigator.clipboard && navigator.clipboard.readText) {
+    try { text = await navigator.clipboard.readText(); } catch {}
+  }
+  if (text && text.trim().length >= 3) {
+    await handlePasteText(text);
+  } else {
+    openPasteModal();
+  }
+};
+
+window.addEventListener('paste', async (e) => {
+  const targetTag = e.target?.tagName;
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag)) {
+    return;
+  }
+  const text = e.clipboardData?.getData('text');
+  if (text && text.trim().length >= 3) {
+    e.preventDefault();
+    await handlePasteText(text);
+  }
+});
+
 async function autoClassifyUnknownGenders() {
   const unknowns = students.filter(s => (!s.gender || s.gender === 'unknown') && !s.genderManual);
   if (!unknowns.length) return;
@@ -1975,6 +2207,7 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       $('#modal').classList.remove('show');
       $('#settingsModal').classList.remove('show');
+      $('#pasteModal').classList.remove('show');
     }
     return;
   }
@@ -2005,6 +2238,7 @@ window.addEventListener('keydown', (e) => {
   } else if (e.key === 'Escape') {
     $('#modal').classList.remove('show');
     $('#settingsModal').classList.remove('show');
+    $('#pasteModal').classList.remove('show');
   }
 });
 
