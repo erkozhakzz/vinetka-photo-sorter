@@ -17,8 +17,18 @@
  *    - Нумерованные (1., №1, 1)) и ненумерованные строки
  */
 
-const XLSX = require('xlsx');
-const mammoth = require('mammoth');
+let _xlsx = null;
+function getXLSX() {
+  if (!_xlsx) _xlsx = require('xlsx');
+  return _xlsx;
+}
+
+let _mammoth = null;
+function getMammoth() {
+  if (!_mammoth) _mammoth = require('mammoth');
+  return _mammoth;
+}
+
 const { readFile } = require('node:fs/promises');
 const path = require('node:path');
 
@@ -260,7 +270,7 @@ function parseWorkbook(workbook) {
     const sheet = workbook.Sheets[sheetName];
     if (!sheet) continue;
 
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+    const rows = getXLSX().utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
     for (const row of rows) {
       if (!Array.isArray(row) || !row.length) continue;
 
@@ -286,11 +296,11 @@ async function parseDocumentFile(filePath) {
 
   try {
     if (['.xlsx', '.xls', '.csv'].includes(ext)) {
-      const workbook = XLSX.readFile(filePath, { type: 'file', codepage: 65001 });
+      const workbook = getXLSX().readFile(filePath, { type: 'file', codepage: 65001 });
       result = parseWorkbook(workbook);
       result.format = ext.replace('.', '').toUpperCase();
     } else if (ext === '.docx') {
-      const rawResult = await mammoth.extractRawText({ path: filePath });
+      const rawResult = await getMammoth().extractRawText({ path: filePath });
       const lines = rawResult.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       result = parseTextLines(lines);
       result.format = 'DOCX';

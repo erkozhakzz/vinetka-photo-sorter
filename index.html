@@ -2138,7 +2138,14 @@ $('#export').onclick = async () => {
     if (!fObj) return;
 
     const ext = chosenName.split('.').pop() || 'jpg';
-    const prefix = series.category === 'FULL_CLASS' ? 'Общий_класс' : 'Коллаж';
+    let prefix = 'Коллаж';
+    if (series.category === 'GENERAL_CLASS' || series.category === 'FULL_CLASS') {
+      prefix = 'Общий_класс';
+    } else if (series.category === 'BOYS') {
+      prefix = 'Мальчики';
+    } else if (series.category === 'GIRLS') {
+      prefix = 'Девчонки';
+    }
     const seriesNum = String(idx + 1).padStart(2, '0');
     const baseNum = chosenName.replace(/\.[^.]+$/, '');
     const outputName = `${prefix}_${seriesNum}_${baseNum}.${ext}`;

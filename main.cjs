@@ -17,6 +17,25 @@ let selectedRoot = '', mainWindow, licenseWindow, accessTimer, updateTimer, upda
 let cachedDeviceId = null;
 let currentLicenseStatus = { mode: 'unknown', text: 'Тексерілуде...', daysLeft: null, customer: '', licenseKey: '' };
 
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+  process.exit(0);
+}
+
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
+
+// Chromium speedup switches
+app.commandLine.appendSwitch('disable-features', 'HardwareMediaKeyHandling,MediaSessionService');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+
 protocol.registerSchemesAsPrivileged([{ scheme: 'vinetka-photo', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 function inside(child, parent) { const rel = path.relative(parent, child); return rel && !rel.startsWith('..') && !path.isAbsolute(rel); }
 function licensePath() { return path.join(app.getPath('userData'), 'license.dat'); }
@@ -265,6 +284,7 @@ async function openMainWindow() {
     minWidth: 1100, 
     minHeight: 720, 
     backgroundColor: '#080a0b', 
+    show: false,
     icon: path.join(__dirname, 'icon.png'), 
     webPreferences: { 
       preload: path.join(__dirname, 'preload.cjs'), 
@@ -274,6 +294,14 @@ async function openMainWindow() {
     } 
   });
   mainWindow.setMenuBarVisibility(false);
+
+  mainWindow.once('ready-to-show', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
+  });
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) mainWindow.show();
+  }, 250);
+
   await mainWindow.loadFile(path.join(__dirname, 'index.html'));
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   

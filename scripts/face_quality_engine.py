@@ -921,6 +921,8 @@ def main():
         boys_counter = 0
         girls_counter = 0
 
+        overall_max_faces = max((max(x.get("faces_count", 0) for x in b) for b in raw_bursts), default=0)
+
         for idx, burst in enumerate(raw_bursts, 1):
             avg_faces = sum(x.get("faces_count", 0) for x in burst) / len(burst)
             max_faces = max(x.get("faces_count", 0) for x in burst)
@@ -933,7 +935,9 @@ def main():
             # горизонтальная альбомная компоновка и резкость на лицах!
             best_frame = max(burst, key=lambda x: (x.get("group_score", 0.0), x.get("sharpness", 0.0)))
 
-            if max_faces >= 15 or avg_faces >= 14.0:
+            is_general = (max_faces >= 15 or avg_faces >= 14.0) or (max_faces >= 8 and max_faces >= overall_max_faces * 0.85 and general_counter == 1 and not is_vert)
+
+            if is_general:
                 cat = "GENERAL_CLASS"
                 label = f"Общая фотография класса (серия {general_counter})"
                 general_counter += 1
