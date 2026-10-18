@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VINETKA Photo Sorter — Скачать приложение для Windows и Mac</title>
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/erkozhakzz/vinetka-photo-sorter/main/icon.png">
+  <style>
+    :root {
+      --bg: #07090a;
+      --panel: #111416;
+      --panel2: #171b1e;
+      --line: #2a2f33;
+      --text: #f6f6f3;
+      --muted: #949a9e;
+      --orange: #ff6800;
+      --green: #3ddc91;
+      --blue: #2f80ed;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      overflow-x: hidden;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 104, 0, 0.12);
+      border: 1px solid rgba(255, 104, 0, 0.35);
+      color: var(--orange);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+    .header h1 {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .header h1 span {
+      color: var(--orange);
+    }
+    .header p {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 650px;
+      line-height: 1.5;
+      margin-bottom: 36px;
+    }
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 680px) {
+      .download-grid {
+        grid-template-columns: 1fr;
+      }
+      .header h1 {
+        font-size: 32px;
+      }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 104, 0, 0.4);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+    .card.recommended {
+      border-color: var(--orange);
+      box-shadow: 0 0 25px rgba(255, 104, 0, 0.2);
+    }
+    .rec-tag {
+      position: absolute;
+      top: -12px;
+      background: var(--orange);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .platform-icon {
+      width: 56px;
+      height: 56px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .platform-icon svg {
+      width: 100%;
+      height: 100%;
+      fill: var(--text);
+    }
+    .card h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .card .sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .btn {
+      width: 100%;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(255, 104, 0, 0.35);
+    }
+    .btn:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(255, 104, 0, 0.5);
+    }
+    .btn-secondary {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      box-shadow: none;
+    }
+    .btn-secondary:hover {
+      border-color: var(--orange);
+      background: rgba(255, 104, 0, 0.1);
+    }
+    .file-meta {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .features {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      text-align: left;
+      margin-bottom: 30px;
+    }
+    .feat-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .feat-icon {
+      font-size: 20px;
+      line-height: 1;
+      padding-top: 2px;
+    }
+    .feat-text b {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    .feat-text span {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .tg-block {
+      background: rgba(47, 128, 237, 0.08);
+      border: 1px solid rgba(47, 128, 237, 0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+      text-align: left;
+    }
+    @media (max-width: 580px) {
+      .tg-block {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+    .tg-info b {
+      font-size: 14px;
+      color: #60a5fa;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .tg-info p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .tg-btn {
+      background: #2563eb;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .tg-btn:hover {
+      background: #1d4ed8;
+    }
+    footer {
+      width: 100%;
+      border-top: 1px solid var(--line);
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    footer a {
+      color: var(--orange);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      <span id="versionText">Версия 2.2.7 — Актуальный релиз</span>
+    </div>
+
+    <div class="header">
+      <h1>VINETKA <span>Photo Sorter</span></h1>
+      <p>Интеллектуальная программа автоматической сортировки фотографий выпускников, отбора лучших дублей общих коллажей и распознавания списков.</p>
+    </div>
+
+    <div class="download-grid">
+      <!-- Windows Card -->
+      <div class="card" id="cardWin">
+        <div class="rec-tag" id="tagWin" style="display:none;">Рекомендуется</div>
+        <div class="platform-icon">
+          <svg viewBox="0 0 88 88">
+            <path d="M0 12.4l35.7-4.9.1 34.3H0V12.4zm0 39.4l35.8.1v34.4l-35.8-5V51.8zm41.6-45L88 0v41.7H41.6V6.8zm46.4 45.1L88 88l-46.4-6.5V51.9H88z"/>
+          </svg>
+        </div>
+        <h2>Windows 10 / 11</h2>
+        <div class="sub">64-bit (x64) · Установщик в 1 клик</div>
+        <a href="https://github.com/erkozhakzz/vinetka-photo-sorter/releases/download/v2.2.7/VINETKA-Photo-Sorter-Setup-2.2.7.exe" class="btn" id="btnWin">
+          <span>⬇</span>
+          <span>Скачать для Windows (.exe)</span>
+        </a>
+        <div class="file-meta">Размер: ~150 МБ · Быстрая установка</div>
+      </div>
+
+      <!-- Mac Card -->
+      <div class="card" id="cardMac">
+        <div class="rec-tag" id="tagMac" style="display:none;">Рекомендуется</div>
+        <div class="platform-icon">
+          <svg viewBox="0 0 170 170">
+            <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.66-7.85-11.88-14.42-6.52-10.12-11.66-21.66-15.42-34.62-3.76-12.96-5.64-25.13-5.64-36.52 0-14.24 3.42-26.15 10.25-35.73 6.83-9.58 15.35-14.48 25.56-14.7 4.9 0 10.25 1.37 16.05 4.11 5.8 2.74 9.69 4.17 11.67 4.29 1.63 0 5.66-1.52 12.09-4.57 6.43-3.04 12.03-4.4 16.8-4.08 12.74.65 22.84 5.34 30.3 14.06-11.11 6.75-16.55 16.11-16.33 28.09.22 9.58 3.92 17.63 11.11 24.16 7.19 6.53 15.67 10.23 25.46 11.1-2.29 7.08-5.23 14.37-8.83 21.87zM119.22 31.81c0-7.73 2.72-14.91 8.16-21.55 5.44-6.64 12.19-10.26 20.25-10.26.11 1.09.11 1.96 0 2.61-.43 7.73-3.37 14.8-8.82 21.22-5.45 6.42-12.3 9.9-20.55 10.45.33-.87.49-1.69.49-2.47z"/>
+          </svg>
+        </div>
+        <h2>macOS (Apple Silicon)</h2>
+        <div class="sub">M1 / M2 / M3 / M4 · Готовое приложение</div>
+        <a href="https://github.com/erkozhakzz/vinetka-photo-sorter/releases/download/v2.2.7/VINETKA-Photo-Sorter-macOS-arm64.zip" class="btn btn-secondary" id="btnMac">
+          <span>⬇</span>
+          <span>Скачать для Mac (.zip)</span>
+        </a>
+        <div class="file-meta">Размер: ~111 МБ · Без установки</div>
+      </div>
+    </div>
+
+    <!-- Telegram License Bot banner -->
+    <div class="tg-block">
+      <div class="tg-info">
+        <b>Лицензия и ключи активации</b>
+        <p>Получите мгновенный ключ активации через официального Telegram-бота @vinetka_keys_kz_bot</p>
+      </div>
+      <a href="https://t.me/vinetka_keys_kz_bot" target="_blank" class="tg-btn">Открыть бота Telegram</a>
+    </div>
+
+    <!-- Features Overview -->
+    <div class="features">
+      <div class="feat-item">
+        <div class="feat-icon">⚡</div>
+        <div class="feat-text">
+          <b>Мгновенный запуск за 0.4 сек</b>
+          <span>Оптимизированное ядро Electron 32 без задержек и подвисаний.</span>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">👥</div>
+        <div class="feat-text">
+          <b>Умный ИИ отбор коллажей</b>
+          <span>Автоматически находит общий класс, группы мальчиков и девочек, выбирая кадр с открытыми глазами.</span>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">📋</div>
+        <div class="feat-text">
+          <b>Прямая вставка списка (Ctrl+V)</b>
+          <span>Не нужны Word или Excel — просто скопируйте список из WhatsApp и нажмите Ctrl+V.</span>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">🔒</div>
+        <div class="feat-text">
+          <b>100% защита оригиналов</b>
+          <span>Исходные фотографии только считываются и никогда не повреждаются и не заменяются.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 VINETKA.KZ · <a href="https://github.com/erkozhakzz/vinetka-photo-sorter">GitHub репозиторий</a> · Создано для школьных фотографов</p>
+  </footer>
+
+  <script>
+    // Auto-detect OS and highlight corresponding card
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isMac = userAgent.includes('mac');
+    const isWin = userAgent.includes('win');
+
+    if (isMac) {
+      document.getElementById('cardMac').classList.add('recommended');
+      document.getElementById('tagMac').style.display = 'block';
+      document.getElementById('btnMac').className = 'btn';
+      document.getElementById('btnWin').className = 'btn btn-secondary';
+    } else {
+      document.getElementById('cardWin').classList.add('recommended');
+      document.getElementById('tagWin').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
