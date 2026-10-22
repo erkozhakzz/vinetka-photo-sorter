@@ -58,8 +58,8 @@ def build_mac_release():
                     plist["CFBundleName"] = "VINETKA Photo Sorter"
                     plist["CFBundleDisplayName"] = "VINETKA Photo Sorter"
                     plist["CFBundleIdentifier"] = "kz.vinetka.photosorter"
-                    plist["CFBundleVersion"] = "2.2.7"
-                    plist["CFBundleShortVersionString"] = "2.2.7"
+                    plist["CFBundleVersion"] = "2.3.0"
+                    plist["CFBundleShortVersionString"] = "2.3.0"
                     plist["CFBundleExecutable"] = "Electron"
                     plist["NSHighResolutionCapable"] = True
                     plist["NSRequiresAquaSystemAppearance"] = False

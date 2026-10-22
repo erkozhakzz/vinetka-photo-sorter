@@ -1,5 +1,5 @@
 #define MyAppName "VINETKA Photo Sorter"
-#define MyAppVersion "2.2.7"
+#define MyAppVersion "2.3.0"
 #define MyAppPublisher "VINETKA.KZ"
 #define MyAppURL "https://vinetka.kz"
 #define MyAppExeName "VINETKA Photo Sorter.exe"
@@ -15,7 +15,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={localappdata}\Programs\{#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=C:\Temp\installer_out
-OutputBaseFilename=VINETKA-Photo-Sorter-Setup-2.2.7
+OutputBaseFilename=VINETKA-Photo-Sorter-Setup-2.3.0
 Compression=lzma2/fast
 SolidCompression=yes
 WizardStyle=modern

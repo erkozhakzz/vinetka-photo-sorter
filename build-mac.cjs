@@ -23,8 +23,8 @@ async function buildMac(arch = 'arm64') {
     overwrite: true,
     appBundleId: 'kz.vinetka.photosorter',
     appCategoryType: 'public.app-category.photography',
-    appVersion: '2.2.7',
-    buildVersion: '2.2.7',
+    appVersion: '2.3.0',
+    buildVersion: '2.3.0',
     prune: true,
     asar: {
       unpack: '{scripts/**,models/**}'
