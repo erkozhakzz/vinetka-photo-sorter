@@ -193,6 +193,133 @@
       color: var(--muted);
     }
 
+    /* VIDEO INSTRUCTION & WORKFLOW SECTION */
+    .video-section {
+      width: 100%;
+      margin-bottom: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .video-header {
+      margin-bottom: 22px;
+    }
+    .video-wrapper {
+      width: 100%;
+      max-width: 920px;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1.5px solid var(--line);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 104, 0, 0.12);
+      background: #000;
+      margin-bottom: 28px;
+      aspect-ratio: 16 / 9;
+      display: flex;
+    }
+    .video-wrapper video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      outline: none;
+    }
+    .workflow-box {
+      width: 100%;
+      max-width: 920px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 18px;
+      align-items: stretch;
+      text-align: left;
+    }
+    @media (max-width: 768px) {
+      .workflow-box {
+        grid-template-columns: 1fr;
+      }
+      .workflow-arrow {
+        transform: rotate(90deg);
+        justify-content: center;
+      }
+    }
+    .workflow-col {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 26px 22px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .workflow-col.col-process {
+      background: linear-gradient(180deg, #181c1f 0%, #111416 100%);
+      border-color: rgba(255, 104, 0, 0.35);
+    }
+    .workflow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      color: var(--orange);
+      font-weight: 800;
+    }
+    .wf-badge {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      background: rgba(61, 220, 145, 0.12);
+      border: 1px solid rgba(61, 220, 145, 0.35);
+      color: var(--green);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+    .wf-badge.orange {
+      background: rgba(255, 104, 0, 0.12);
+      border-color: rgba(255, 104, 0, 0.4);
+      color: var(--orange);
+    }
+    .wf-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .wf-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .wf-icon {
+      font-size: 22px;
+      line-height: 1;
+      padding-top: 2px;
+      flex-shrink: 0;
+    }
+    .wf-item b {
+      display: block;
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .wf-item p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .code-pill {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 12px;
+      background: #090b0c;
+      border: 1px solid var(--line);
+      color: #ffaa66;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin: 4px 4px 2px 0;
+    }
+
     /* PRICING & TARIFFS SECTION */
     .pricing-section {
       width: 100%;
@@ -338,50 +465,6 @@
       transform: translateY(-1px);
     }
 
-    /* STEPS SECTION */
-    .steps-section {
-      width: 100%;
-      margin-bottom: 48px;
-    }
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      text-align: left;
-    }
-    @media (max-width: 680px) {
-      .steps-grid { grid-template-columns: 1fr; }
-    }
-    .step-item {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 22px 18px;
-    }
-    .step-num {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: rgba(255, 104, 0, 0.15);
-      color: var(--orange);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 15px;
-      margin-bottom: 12px;
-    }
-    .step-item b {
-      display: block;
-      font-size: 15px;
-      margin-bottom: 6px;
-    }
-    .step-item p {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
     /* FEATURES GRID */
     .features {
       width: 100%;
@@ -486,6 +569,83 @@
       </div>
     </div>
 
+    <!-- VIDEO INSTRUCTION & WORKFLOW SECTION -->
+    <div class="video-section">
+      <div class="video-header">
+        <div class="badge" style="margin-bottom: 12px; background: rgba(61, 220, 145, 0.12); border-color: rgba(61, 220, 145, 0.4); color: var(--green);">
+          <span class="badge-dot" style="background: var(--green); box-shadow: 0 0 10px var(--green);"></span>
+          <span>Бейне-нұсқаулық · Видео-инструкция</span>
+        </div>
+        <h2 class="section-title">Бағдарлама қалай жұмыс істейді?</h2>
+        <p class="section-subtitle">2 минуттық бейнеден барлық жұмыс барысын көріңіз / Посмотрите, как отсортировать класс за 2 минуты</p>
+      </div>
+
+      <!-- Video Player Wrapper -->
+      <div class="video-wrapper">
+        <video controls preload="metadata" poster="instruction_poster.jpg" playsinline>
+          <source src="instruction.mp4" type="video/mp4">
+          Сіздің браузеріңіз бейнені ойната алмайды / Ваш браузер не поддерживает встроенное видео.
+        </video>
+      </div>
+
+      <!-- Simple Practical Explanation in Kazakh -->
+      <div class="workflow-box">
+        <div class="workflow-col">
+          <div class="wf-badge">1-ҚАДАМ: НЕ ҚАЖЕТ? (МАТЕРИАЛДАР)</div>
+          <div class="wf-content">
+            <div class="wf-item">
+              <div class="wf-icon">📋</div>
+              <div>
+                <b>1. Оқушылар тізімі мен кадрлар нөмірі:</b>
+                <p>Тізімді қалай жазсаңыз да бағдарлама автоматты түрде қабылдай береді:</p>
+                <div class="code-pill">7113 Бақыт Ербол</div>
+                <div class="code-pill">Бақыт Ербол 7113 7114</div>
+                <p style="margin-top:6px; font-size:12px; color:var(--orange);">
+                  💡 WhatsApp немесе Telegram чатынан тізімді көшіріп алып, бағдарламаға жай ғана <b>Ctrl+V</b> басып қоя саласыз — бөлек Word/Excel файл жасаудың тіпті қажеті жоқ!
+                </p>
+              </div>
+            </div>
+            <div class="wf-item">
+              <div class="wf-icon">📸</div>
+              <div>
+                <b>2. Түсірілген фотолар папкасы (Кадрлар):</b>
+                <p>Түсірілімнен кейін фотоаппараттың флешкасынан компьютерге көшірілген түпнұсқа суреттер (JPG немесе RAW).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workflow-arrow">➔</div>
+
+        <div class="workflow-col col-process">
+          <div class="wf-badge orange">2-ҚАДАМ: ҚАЛАЙ ОТБОР ЖАСАЙДЫ?</div>
+          <div class="wf-content">
+            <div class="wf-item">
+              <div class="wf-icon">👤</div>
+              <div>
+                <b>Портреттерді кадр бойынша лезде табу:</b>
+                <p>Тізімдегі кадр нөмірі бойынша (мысалы <b>7113</b>) бағдарлама оқушының жеке суретін лезде табады да, оның аты-жөнін қойып <b>Порт</b> папкасына салады (екінші кадры болса — <b>Мод</b> папкасына барады).</p>
+              </div>
+            </div>
+            <div class="wf-item">
+              <div class="wf-icon">👥</div>
+              <div>
+                <b>Коллаждар мен ортақ фотоны ақылды таңдау:</b>
+                <p>Жалпы сыныппен және топ-топ болып түскен 5–10 дубльдің ішінен жасанды интеллект барлық баланың <b>көзі ашық, күліп тұрған, ең анық шыққан 1 ғана үздік кадрын</b> автоматты түрде таңдап береді.</p>
+              </div>
+            </div>
+            <div class="wf-item">
+              <div class="wf-icon">⚡</div>
+              <div>
+                <b>Бір батырмамен дайын нәтиже:</b>
+                <p><b>«Экспорт»</b> батырмасын басасыз — барлық фотосуреттер өз папкаларына рет-ретімен дайын күйде жиналады!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- PRICING & TARIFFS SECTION -->
     <div class="pricing-section">
       <h2 class="section-title">Тарифы и лицензии</h2>
@@ -547,28 +707,6 @@
       </div>
       <div class="tg-qr-box">
         <img src="qr_telegram.svg" alt="QR Telegram Bot" width="130" height="130" style="display:block;">
-      </div>
-    </div>
-
-    <!-- Quick 3-Step Guide -->
-    <div class="steps-section">
-      <h2 class="section-title">Быстрый старт за 3 шага</h2>
-      <div class="steps-grid" style="margin-top:20px;">
-        <div class="step-item">
-          <div class="step-num">1</div>
-          <b>Скачайте программу</b>
-          <p>Выберите версию для Windows или Mac выше и запустите установку в 1 клик.</p>
-        </div>
-        <div class="step-item">
-          <div class="step-num">2</div>
-          <b>Получите ключ</b>
-          <p>Откройте бота @vinetka_keys_kz_bot в Telegram и получите лицензионный код вида VK-XXXX-XXXX-XXXX-XXXX.</p>
-        </div>
-        <div class="step-item">
-          <div class="step-num">3</div>
-          <b>Сортируйте съёмку</b>
-          <p>Вставьте список класса (Ctrl+V) и программа распределит все портреты и коллажи за считанные секунды.</p>
-        </div>
       </div>
     </div>
 
